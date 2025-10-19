@@ -1,1 +1,1 @@
-# Typescript 
+# Typescript Learning Journey 
