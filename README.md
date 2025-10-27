@@ -1,96 +1,126 @@
-# TypeScript Learning Guide - Day 2 to Day 6 🚀
+# TypeScript Learning Guide 🚀
+
 ## Table of Contents
-- [Day 2 - Core Type System](#day-2---core-type-system)
-- [Day 3 - Type Inference & Type Annotations](#day-3---type-inference--type-annotations)
-- [Day 4 - Interfaces & Type Aliases (Advanced)](#day-4---interfaces--type-aliases-advanced)
-- [Day 5 - Classes & Object-Oriented Concepts](#day-5---classes--object-oriented-concepts)
-- [Day 6 - Advanced TypeScript Concepts](#day-6---advanced-typescript-concepts)
+- [Core Type System](#core-type-system)
+- [Type Inference & Type Annotations](#type-inference--type-annotations)
+- [Interfaces & Type Aliases](#interfaces--type-aliases)
+- [Classes & Object-Oriented Programming](#classes--object-oriented-programming)
+- [Functions in TypeScript](#functions-in-typescript)
+- [Generics](#generics)
+- [Modules](#modules)
+- [Type Assertions & Type Guards](#type-assertions--type-guards)
+- [Utility Types](#utility-types)
+- [Advanced Types](#advanced-types)
+- [Decorators](#decorators)
+- [Declaration Files](#declaration-files)
 
 ---
 
-## ⚡ Day 2 - Core Type System
+## ⚡ Core Type System
 
 ### Primitive Types
 
-**Kya hai?** Primitive types wo basic data types hain jo JavaScript mein already hain - string, number, boolean, null, aur undefined.
+**Kya hai?** Basic data types jo JavaScript mein already hain.
 
 ```typescript
-// String - text data ke liye
+// String - text data
 let naam: string = "Rahul";
 let city: string = 'Mumbai';
 
-// Number - sabhi numbers (integers, decimals, etc.)
+// Number - sabhi numbers
 let age: number = 25;
 let price: number = 99.99;
 
-// Boolean - true ya false values
+// Boolean - true/false
 let isActive: boolean = true;
-let hasCompleted: boolean = false;
 
-// Null - intentionally empty value
+// Null & Undefined
 let data: null = null;
-
-// Undefined - value assign nahi hui
 let value: undefined = undefined;
 ```
 
-### The `any` and `unknown` types
+### The `any` and `unknown` Types
 
-**`any` type:** Jab aapko type pata nahi ho ya kisi bhi type ki value allow karni ho.
+**`any`** - Kisi bhi type ko allow karta hai (Type safety lose ho jati hai).
 
 ```typescript
 let randomValue: any = 10;
-randomValue = "Hello"; // Koi error nahi
-randomValue = true; // Ye bhi chalega
-randomValue.toUpperCase(); // TypeScript complain nahi karega (dangerous!)
+randomValue = "Hello";
+randomValue.toUpperCase(); // Koi error nahi (dangerous!)
 ```
 
-**`unknown` type:** Ye bhi kisi bhi type ko accept karta hai, but safer hai kyunki use karne se pehle type check karna padta hai.
+**`unknown`** - Safer alternative, use se pehle type check zaroori.
 
 ```typescript
-let userInput: unknown = 10;
-userInput = "Hello";
+let userInput: unknown = "Hello";
 
-// Error aayega - type check karna zaroori hai
-// userInput.toUpperCase(); 
-
-// Sahi tarika - pehle check karo
+// Type check karna padega
 if (typeof userInput === "string") {
-    console.log(userInput.toUpperCase()); // Ab safe hai
+    console.log(userInput.toUpperCase()); // Safe
+}
+```
+
+### The `never` Type
+
+**Kya hai?** Never type us value ko represent karta hai jo kabhi nahi aati.
+
+```typescript
+// Function jo kabhi return nahi karta (infinite loop)
+function infiniteLoop(): never {
+    while (true) {}
+}
+
+// Function jo hamesha error throw karta hai
+function throwError(message: string): never {
+    throw new Error(message);
+}
+
+// Never in union types - automatically remove ho jata hai
+type Result = string | never; // Basically: string
+
+// Exhaustive checks
+type Shape = "circle" | "square";
+
+function getArea(shape: Shape): number {
+    switch (shape) {
+        case "circle":
+            return 10;
+        case "square":
+            return 20;
+        default:
+            const _exhaustive: never = shape; // Compile error agar naya case add ho
+            return _exhaustive;
+    }
 }
 ```
 
 ### Union and Intersection Types
 
-**Union Types:** Ek variable multiple types mein se ek ho sakta hai (OR logic).
+**Union Types** - Multiple types mein se ek (OR logic).
 
 ```typescript
 let id: string | number;
 id = 101; // Valid
-id = "ABC123"; // Ye bhi valid
+id = "ABC123"; // Valid
 
 function printId(id: string | number) {
-    console.log("Your ID is: " + id);
+    console.log("ID: " + id);
 }
-
-printId(101);
-printId("XYZ789");
 ```
 
-**Intersection Types:** Multiple types ko combine karna (AND logic).
+**Intersection Types** - Multiple types combine karna (AND logic).
 
 ```typescript
-type Person = {
+interface Person {
     name: string;
     age: number;
-};
+}
 
-type Employee = {
+interface Employee {
     empId: number;
     department: string;
-};
+}
 
-// Dono types ki properties hongi
 type Staff = Person & Employee;
 
 let staff: Staff = {
@@ -101,45 +131,78 @@ let staff: Staff = {
 };
 ```
 
-### Arrays and Tuples
+### Literal Types
 
-**Arrays:** Same type ke elements ka collection.
+**Kya hai?** Specific values ko type ki tarah use karna.
 
 ```typescript
-// Number array
-let numbers: number[] = [1, 2, 3, 4, 5];
+// String literal types
+let direction: "left" | "right" | "up" | "down";
+direction = "left"; // Valid
+// direction = "forward"; // Error!
 
-// String array - alternate syntax
-let fruits: Array<string> = ["Apple", "Banana", "Mango"];
+// Numeric literal types
+let diceRoll: 1 | 2 | 3 | 4 | 5 | 6;
+diceRoll = 4; // Valid
 
-// Mixed types with union
-let mixed: (string | number)[] = [1, "two", 3, "four"];
+// Boolean literal
+let isTrue: true;
+isTrue = true; // Valid only
+
+// Practical example
+type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
+
+function makeRequest(url: string, method: HttpMethod) {
+    console.log(`${method} request to ${url}`);
+}
+
+makeRequest("/api/users", "GET");
+makeRequest("/api/users", "POST");
+// makeRequest("/api/users", "PATCH"); // Error!
+
+// Object literal types
+type ButtonConfig = {
+    type: "primary" | "secondary" | "danger";
+    size: "small" | "medium" | "large";
+};
+
+let button: ButtonConfig = {
+    type: "primary",
+    size: "large"
+};
 ```
 
-**Tuples:** Fixed length array jisme har position ki type fixed hai.
+### Arrays and Tuples
 
+**Arrays:**
 ```typescript
-// [string, number] tuple - pehla string, doosra number hona chahiye
+let numbers: number[] = [1, 2, 3, 4, 5];
+let fruits: Array<string> = ["Apple", "Banana"];
+let mixed: (string | number)[] = [1, "two", 3];
+```
+
+**Tuples:**
+```typescript
+// Fixed length, fixed types
 let person: [string, number] = ["Rahul", 25];
-
-// Aise galat hai
-// let wrong: [string, number] = [25, "Rahul"]; // Error!
-
-// Practical example - coordinates
 let coordinate: [number, number] = [10.5, 20.3];
 
-// Tuple with multiple types
-let user: [string, number, boolean] = ["Priya", 28, true];
-console.log(user[0]); // "Priya"
-console.log(user[1]); // 28
+// Named tuples (TypeScript 4.0+)
+let user: [name: string, age: number, active: boolean] = ["Priya", 28, true];
+
+// Optional tuple elements
+let point: [number, number, number?] = [10, 20]; // Third element optional
+
+// Rest in tuples
+let scores: [string, ...number[]] = ["Math", 90, 85, 92];
 ```
 
 ### Enums
 
-**Kya hai?** Named constants ka collection. Jab aapko fixed values chahiye (jaise days of week, status codes).
+**Kya hai?** Named constants ka collection.
 
 ```typescript
-// Numeric Enum - by default 0 se start hota hai
+// Numeric Enum
 enum Direction {
     Up,      // 0
     Down,    // 1
@@ -147,274 +210,146 @@ enum Direction {
     Right    // 3
 }
 
-let move: Direction = Direction.Up;
-console.log(move); // 0
-
-// Custom values ke saath
+// String Enum
 enum Status {
-    Pending = 1,
-    Approved = 2,
-    Rejected = 3
+    Pending = "PENDING",
+    Approved = "APPROVED",
+    Rejected = "REJECTED"
 }
 
 let orderStatus: Status = Status.Approved;
 
-// String Enum
-enum Colors {
+// Const Enum (compile time mein replace ho jata hai)
+const enum Colors {
     Red = "RED",
     Green = "GREEN",
     Blue = "BLUE"
 }
 
-let favoriteColor: Colors = Colors.Blue;
-console.log(favoriteColor); // "BLUE"
+let color = Colors.Red; // Compiled code mein "RED" ho jayega
 ```
 
 ### Type Aliases
 
-**Kya hai?** Custom type names create karna - code ko readable aur reusable banana.
+**Kya hai?** Custom type names create karna.
 
 ```typescript
-// Simple type alias
 type ID = string | number;
+type UserID = ID;
 
-let userId: ID = 123;
-let productId: ID = "PROD-456";
-
-// Object type alias
 type User = {
     name: string;
     age: number;
     email: string;
 };
 
-let user1: User = {
-    name: "Sanjay",
-    age: 32,
-    email: "sanjay@example.com"
-};
-
-// Function type alias
 type GreetFunction = (name: string) => string;
 
-let greet: GreetFunction = (name) => {
-    return `Hello, ${name}!`;
-};
+let greet: GreetFunction = (name) => `Hello, ${name}!`;
 ```
 
 ---
 
-## ⚡ Day 3 - Type Inference & Type Annotations
+## ⚡ Type Inference & Type Annotations
 
-### Type Inference - How TypeScript automatically detects types
+### Type Inference
 
-**Kya hai?** TypeScript khud se samajh jata hai ki variable ki type kya honi chahiye initial value dekh kar.
+**Kya hai?** TypeScript khud type detect karta hai.
 
 ```typescript
-// TypeScript automatically samajh gaya ki ye number hai
-let score = 100; // Type: number
-// score = "hundred"; // Error! string assign nahi kar sakte
-
+let score = 100; // Type: number (automatic)
 let message = "Hello"; // Type: string
 let isValid = true; // Type: boolean
 
-// Arrays mein bhi
-let numbers = [1, 2, 3]; // Type: number[]
-let names = ["Ram", "Shyam"]; // Type: string[]
-```
+// Function return type inference
+function add(a: number, b: number) {
+    return a + b; // Return type: number (inferred)
+}
 
-### Type Inference in variables, functions, and return types
-
-**Variables:**
-```typescript
-let x = 10; // Type: number automatically infer hua
-let y = "TypeScript"; // Type: string
-
-// Best value inference - union type ban jayega
+// Best common type
 let mixed = Math.random() > 0.5 ? 10 : "ten"; // Type: number | string
 ```
 
-**Functions - Return Type Inference:**
-```typescript
-// TypeScript samajh jayega ki return type string hai
-function getName() {
-    return "Rohan";
-}
+### Type Annotations
 
-// Return type number hai automatically
-function add(a: number, b: number) {
-    return a + b; // TypeScript jaanta hai result number hoga
-}
-
-// Multiple returns - common type inference
-function getValue(flag: boolean) {
-    if (flag) {
-        return 42;
-    }
-    return "Not a number";
-} // Return type: string | number
-```
-
-### Type Annotations - Explicitly defining types
-
-**Kya hai?** Jab hum khud explicitly type define karte hain.
+**Kya hai?** Explicitly type define karna.
 
 ```typescript
-// Type annotation - explicitly bata rahe hain
 let username: string = "Ajay";
 let age: number = 25;
-let isStudent: boolean = false;
 
-// Function parameters mein annotations zaroori hain
+// Function with annotations
 function greet(name: string, age: number): string {
     return `Hello ${name}, you are ${age} years old`;
 }
 
-// Object type annotation
+// Object annotation
 let person: {
     name: string;
     age: number;
-    city: string;
 } = {
     name: "Priya",
-    age: 28,
-    city: "Delhi"
-};
-
-// Array annotation
-let scores: number[] = [85, 90, 78];
-```
-
-### Comparing inferred vs annotated types
-
-```typescript
-// Type Inference - TypeScript khud figure out karega
-let city = "Mumbai"; // Inferred as string
-
-// Type Annotation - Hum explicitly define kar rahe hain
-let country: string = "India";
-
-// Dono same kaam karte hain, but annotation mein clarity hai
-
-// Complex example
-let user = {
-    name: "Vikram",
-    age: 30
-}; // TypeScript infer karega: { name: string; age: number; }
-
-// Same thing with annotation
-let user2: {
-    name: string;
-    age: number;
-} = {
-    name: "Vikram",
-    age: 30
+    age: 28
 };
 ```
 
-### When to rely on inference vs when to use annotations
+### When to Use Inference vs Annotations
 
-**Inference use karo jab:**
-- Simple assignments ho
-- Type obvious ho initial value se
-- Code concise rakhna ho
+**Inference use karo:**
+- Simple assignments
+- Type obvious ho
 
-```typescript
-let count = 0; // Inference is fine
-let items = ["apple", "banana"]; // Clear hai ki string[] hai
-```
-
-**Annotations use karo jab:**
-- Function parameters define kar rahe ho (mandatory hai)
-- Return type explicitly chahiye (better documentation)
-- Variable declare kar rahe ho bina value ke
-- Type se default value different ho sakti hai
+**Annotations use karo:**
+- Function parameters (mandatory)
+- Variable without initial value
+- Specific type enforce karna ho
 
 ```typescript
-// Variable without initial value - annotation zaroori
+// Inference sufficient
+let count = 0;
+
+// Annotation needed
 let userId: number;
 userId = 101;
 
-// Function - parameters mein annotation zaroori
-function calculateTotal(price: number, tax: number): number {
+function calculate(price: number, tax: number): number {
     return price + tax;
 }
-
-// Jab aap specific type enforce karna chahte ho
-let data: string | number;
-data = 100;
-data = "hundred"; // Dono valid
 ```
 
 ---
 
-## ⚡ Day 4 - Interfaces & Type Aliases (Advanced)
+## ⚡ Interfaces & Type Aliases
 
 ### Defining Interfaces
 
-**Kya hai?** Interface ek contract hai jo batata hai ki object ki shape kaisi honi chahiye.
+**Kya hai?** Object ki shape define karna.
 
 ```typescript
-// Basic interface definition
 interface User {
     name: string;
     age: number;
     email: string;
 }
 
-// Interface use karna
 let user: User = {
     name: "Amit",
     age: 25,
     email: "amit@example.com"
 };
 
-// Function mein interface use karna
-function displayUser(user: User) {
-    console.log(`Name: ${user.name}, Age: ${user.age}`);
-}
-
-displayUser(user);
-```
-
-### Using Interfaces to define object shapes
-
-```typescript
-// Optional properties - question mark se
+// Optional properties
 interface Product {
     id: number;
     name: string;
-    price: number;
-    description?: string; // Optional hai
+    description?: string; // Optional
 }
 
-let product1: Product = {
-    id: 1,
-    name: "Laptop",
-    price: 45000
-    // description nahi diya - no problem
-};
-
-let product2: Product = {
-    id: 2,
-    name: "Phone",
-    price: 20000,
-    description: "Latest smartphone"
-};
-
-// Readonly properties - change nahi kar sakte
+// Readonly properties
 interface Config {
     readonly apiKey: string;
-    readonly endpoint: string;
     timeout?: number;
 }
-
-let config: Config = {
-    apiKey: "ABC123",
-    endpoint: "https://api.example.com"
-};
-
-// config.apiKey = "NEW_KEY"; // Error! Readonly hai
 
 // Function types in interface
 interface MathOperation {
@@ -422,21 +357,57 @@ interface MathOperation {
 }
 
 let add: MathOperation = (a, b) => a + b;
-let multiply: MathOperation = (a, b) => a * b;
+```
+
+### Index Signatures
+
+**Kya hai?** Dynamic property names allow karna.
+
+```typescript
+// String index signature
+interface StringDictionary {
+    [key: string]: string;
+}
+
+let dict: StringDictionary = {
+    name: "Raj",
+    city: "Mumbai",
+    country: "India"
+};
+
+// Number index signature
+interface NumberArray {
+    [index: number]: string;
+}
+
+let names: NumberArray = ["Raj", "Amit", "Priya"];
+
+// Mixed with known properties
+interface UserData {
+    id: number;
+    name: string;
+    [key: string]: any; // Additional properties allowed
+}
+
+let userData: UserData = {
+    id: 1,
+    name: "Raj",
+    age: 25,
+    city: "Mumbai"
+};
+
+// Record utility type (better alternative)
+type StringRecord = Record<string, string>;
 ```
 
 ### Extending Interfaces
 
-**Kya hai?** Ek interface ko doosre interface se extend kar sakte hain (inheritance).
-
 ```typescript
-// Base interface
 interface Person {
     name: string;
     age: number;
 }
 
-// Person ko extend kar rahe hain
 interface Employee extends Person {
     empId: number;
     department: string;
@@ -447,183 +418,55 @@ let employee: Employee = {
     age: 30,
     empId: 1001,
     department: "Sales"
-    // Person ke saare properties + Employee ke properties
 };
 
-// Multiple interfaces extend karna
+// Multiple inheritance
 interface Animal {
     name: string;
-    sound: string;
 }
 
 interface CanFly {
     wingSpan: number;
-    maxAltitude: number;
 }
 
 interface Bird extends Animal, CanFly {
     species: string;
 }
-
-let eagle: Bird = {
-    name: "Golden Eagle",
-    sound: "Screech",
-    wingSpan: 2.2,
-    maxAltitude: 3000,
-    species: "Aquila chrysaetos"
-};
 ```
 
-### Type Aliases - Using `type` keyword
-
-**Kya hai?** `type` keyword se custom types bana sakte hain.
+### Type Aliases vs Interfaces
 
 ```typescript
-// Primitive type alias
+// Type alias - unions, intersections, primitives
 type ID = string | number;
+type Point = { x: number; y: number; };
 
-let userId: ID = 101;
-let productId: ID = "PROD_456";
-
-// Object type alias
-type Point = {
-    x: number;
-    y: number;
-};
-
-let coordinate: Point = { x: 10, y: 20 };
-
-// Function type alias
-type Operation = (a: number, b: number) => number;
-
-let subtract: Operation = (a, b) => a - b;
-
-// Union types
-type Status = "pending" | "approved" | "rejected";
-
-let orderStatus: Status = "approved";
-// orderStatus = "cancelled"; // Error! Valid values mein se nahi hai
-
-// Complex type alias
-type Address = {
-    street: string;
-    city: string;
-    pincode: number;
-};
-
-type Customer = {
-    id: number;
-    name: string;
-    address: Address;
-    status: Status;
-};
-
-let customer: Customer = {
-    id: 1,
-    name: "Suresh",
-    address: {
-        street: "MG Road",
-        city: "Bangalore",
-        pincode: 560001
-    },
-    status: "approved"
-};
-```
-
-### Intersection Types - Combining multiple types
-
-**Kya hai?** Multiple types ko combine karke ek naya type banana (`&` operator se).
-
-```typescript
-// Do types ko combine karna
-type HasName = {
-    name: string;
-};
-
-type HasAge = {
-    age: number;
-};
-
-type Person = HasName & HasAge;
-
-let person: Person = {
-    name: "Meera",
-    age: 27
-    // Dono properties chahiye
-};
-
-// Practical example - Multiple capabilities combine karna
-type Printable = {
-    print: () => void;
-};
-
-type Scannable = {
-    scan: () => void;
-};
-
-type AllInOnePrinter = Printable & Scannable;
-
-let printer: AllInOnePrinter = {
-    print: () => console.log("Printing..."),
-    scan: () => console.log("Scanning...")
-};
-
-// Type aliases with intersection
-type BusinessPartner = {
-    name: string;
-    credit: number;
-};
-
-type Contact = {
-    email: string;
-    phone: string;
-};
-
-type Supplier = BusinessPartner & Contact;
-
-let supplier: Supplier = {
-    name: "ABC Suppliers",
-    credit: 100000,
-    email: "contact@abc.com",
-    phone: "9876543210"
-};
-```
-
-**Interface vs Type Alias:**
-```typescript
-// Interface - extend kar sakte hain, declaration merging hota hai
+// Interface - extending, declaration merging
 interface User {
     name: string;
 }
 
 interface User {
-    age: number; // Same name, merge ho jayega
+    age: number; // Merges with above
 }
 
-let user: User = {
-    name: "Raj",
-    age: 25
-};
+// Intersection types
+type Admin = { role: string } & User;
 
-// Type - extend nahi kar sakte same name se, unions/intersections better
-type Admin = {
-    name: string;
-    role: string;
-};
-
-// type Admin = { level: number }; // Error! Redeclaration nahi kar sakte
+// Key differences:
+// 1. Interface can be reopened (declaration merging)
+// 2. Type alias can use unions/intersections
+// 3. Interface better for object shapes
+// 4. Type alias more flexible
 ```
 
 ---
 
-## ⚡ Day 5 - Classes & Object-Oriented Concepts
+## ⚡ Classes & Object-Oriented Programming
 
 ### Classes and Objects
 
-**Kya hai?** Class ek blueprint hai objects banane ke liye.
-
 ```typescript
-// Simple class definition
 class Person {
     name: string;
     age: number;
@@ -634,73 +477,32 @@ class Person {
     }
 
     greet() {
-        console.log(`Hello, mera naam ${this.name} hai`);
+        console.log(`Hello, ${this.name}`);
     }
 }
 
-// Object creation
-let person1 = new Person("Rahul", 25);
-person1.greet(); // "Hello, mera naam Rahul hai"
-
-let person2 = new Person("Priya", 28);
-console.log(person2.age); // 28
-```
-
-### Constructors
-
-**Kya hai?** Constructor wo special method hai jo object create hote time automatically call hota hai.
-
-```typescript
-class Car {
-    brand: string;
-    model: string;
-    year: number;
-
-    // Constructor - object initialization ke liye
-    constructor(brand: string, model: string, year: number) {
-        this.brand = brand;
-        this.model = model;
-        this.year = year;
-        console.log("Nayi car bani!");
-    }
-
-    getDetails() {
-        return `${this.brand} ${this.model} (${this.year})`;
-    }
-}
-
-let myCar = new Car("Toyota", "Fortuner", 2023);
-console.log(myCar.getDetails()); // "Toyota Fortuner (2023)"
+let person = new Person("Rahul", 25);
+person.greet();
 ```
 
 ### Access Modifiers
 
-**Kya hai?** Properties aur methods ki visibility control karte hain.
-
 ```typescript
 class BankAccount {
-    // Public - kahin se bhi access kar sakte (default)
-    public accountHolder: string;
-    
-    // Private - sirf class ke andar access ho sakta
-    private balance: number;
-    
-    // Protected - class aur uski child classes mein access ho sakta
-    protected accountType: string;
+    public accountHolder: string;      // Anywhere accessible
+    private balance: number;           // Only inside class
+    protected accountType: string;     // Class + child classes
 
-    constructor(holder: string, initialBalance: number) {
+    constructor(holder: string, balance: number) {
         this.accountHolder = holder;
-        this.balance = initialBalance;
+        this.balance = balance;
         this.accountType = "Savings";
     }
 
-    // Public method
     public deposit(amount: number) {
         this.balance += amount;
-        console.log(`${amount} rupees deposit kiye`);
     }
 
-    // Private method - sirf class ke andar use ho sakta
     private calculateInterest() {
         return this.balance * 0.04;
     }
@@ -709,80 +511,26 @@ class BankAccount {
         return this.balance;
     }
 }
-
-let account = new BankAccount("Amit", 5000);
-console.log(account.accountHolder); // OK - public hai
-account.deposit(2000); // OK - public method
-console.log(account.getBalance()); // 7000
-
-// console.log(account.balance); // Error! Private hai
-// account.calculateInterest(); // Error! Private method
 ```
 
 ### Readonly Properties
-
-**Kya hai?** Readonly properties sirf initialization ke time set ho sakti hain, baad mein change nahi kar sakte.
 
 ```typescript
 class Book {
     readonly isbn: string;
     readonly title: string;
-    author: string;
 
-    constructor(isbn: string, title: string, author: string) {
+    constructor(isbn: string, title: string) {
         this.isbn = isbn;
         this.title = title;
-        this.author = author;
-    }
-
-    updateAuthor(newAuthor: string) {
-        this.author = newAuthor; // OK - readonly nahi hai
-        // this.isbn = "new-isbn"; // Error! Readonly property change nahi kar sakte
     }
 }
 
-let book = new Book("978-0-123456-78-9", "TypeScript Guide", "John Doe");
-console.log(book.isbn); // Read kar sakte hain
-// book.isbn = "new-isbn"; // Error! Change nahi kar sakte
-book.updateAuthor("Jane Doe"); // Author change ho sakta hai
+let book = new Book("978-123", "TypeScript Guide");
+// book.isbn = "new"; // Error!
 ```
 
-### Optional Properties
-
-**Kya hai?** Properties jo optional hain - provide karna zaroori nahi.
-
-```typescript
-class User {
-    name: string;
-    email: string;
-    phone?: string; // Optional property
-    address?: string; // Optional property
-
-    constructor(name: string, email: string, phone?: string) {
-        this.name = name;
-        this.email = email;
-        this.phone = phone; // Ho sakta hai undefined
-    }
-
-    getContactInfo() {
-        let info = `Name: ${this.name}, Email: ${this.email}`;
-        if (this.phone) {
-            info += `, Phone: ${this.phone}`;
-        }
-        return info;
-    }
-}
-
-let user1 = new User("Raj", "raj@example.com", "9876543210");
-let user2 = new User("Simran", "simran@example.com"); // Phone nahi diya
-
-console.log(user1.getContactInfo());
-console.log(user2.getContactInfo());
-```
-
-### Parameter Properties
-
-**Kya hai?** Constructor parameters mein directly access modifiers use karke properties define karna - shorthand syntax.
+### Parameter Properties (Shorthand)
 
 ```typescript
 // Traditional way
@@ -796,31 +544,19 @@ class Student1 {
     }
 }
 
-// Parameter Properties - shorthand (same kaam, kam code)
+// Shorthand with parameter properties
 class Student2 {
     constructor(
         public name: string,
         public rollNo: number,
         private marks: number
-    ) {
-        // Automatically properties ban gayi aur assign ho gayi
-    }
-
-    getMarks() {
-        return this.marks; // Private property access kar sakte hain
-    }
+    ) {}
 }
 
 let student = new Student2("Vikram", 101, 85);
-console.log(student.name); // "Vikram"
-console.log(student.rollNo); // 101
-// console.log(student.marks); // Error! Private hai
-console.log(student.getMarks()); // 85
 ```
 
 ### Getters and Setters
-
-**Kya hai?** Special methods jo properties ko read aur write karne ke liye use hote hain with additional logic.
 
 ```typescript
 class Employee {
@@ -830,304 +566,161 @@ class Employee {
         this._salary = salary;
     }
 
-    // Getter - property ki tarah use hota hai but method hai
     get salary(): number {
-        console.log("Salary access ki gayi");
         return this._salary;
     }
 
-    // Setter - value set karne ke liye
     set salary(newSalary: number) {
         if (newSalary < 0) {
-            console.log("Salary negative nahi ho sakti!");
+            console.log("Invalid salary!");
             return;
         }
-        console.log("Salary update ho gayi");
         this._salary = newSalary;
     }
 
-    // Computed property - getter se
     get annualSalary(): number {
         return this._salary * 12;
     }
 }
 
 let emp = new Employee("Arun", 50000);
-console.log(emp.salary); // Getter call hoga - 50000
-emp.salary = 55000; // Setter call hoga
-emp.salary = -1000; // Validation fail - "Salary negative nahi ho sakti!"
-console.log(emp.annualSalary); // Computed value - 660000
+console.log(emp.salary); // Getter
+emp.salary = 55000; // Setter
 ```
 
 ### Static Members
 
-**Kya hai?** Static members class ke hote hain, individual objects ke nahi. Class name se directly access karte hain.
-
 ```typescript
 class MathHelper {
-    // Static property - sabhi instances ke liye same
     static PI: number = 3.14159;
     
-    // Static method - class se directly call karo
     static calculateCircleArea(radius: number): number {
         return this.PI * radius * radius;
     }
-
-    static max(a: number, b: number): number {
-        return a > b ? a : b;
-    }
 }
 
-// Static members ko class name se access karo
-console.log(MathHelper.PI); // 3.14159
-console.log(MathHelper.calculateCircleArea(5)); // 78.53975
-console.log(MathHelper.max(10, 20)); // 20
+console.log(MathHelper.PI);
+console.log(MathHelper.calculateCircleArea(5));
 
-// Object se access nahi kar sakte
-// let helper = new MathHelper();
-// console.log(helper.PI); // Error!
-
-// Practical example - Counter
+// Counter example
 class Counter {
     static count: number = 0;
 
     constructor() {
-        Counter.count++; // Har object create hone par count badhe
+        Counter.count++;
     }
 
     static getCount() {
         return Counter.count;
     }
-
-    static resetCount() {
-        Counter.count = 0;
-    }
 }
 
 new Counter();
 new Counter();
-new Counter();
-console.log(Counter.getCount()); // 3
-Counter.resetCount();
-console.log(Counter.getCount()); // 0
+console.log(Counter.getCount()); // 2
 ```
 
-### Abstract Classes and Methods
-
-**Kya hai?** Abstract classes wo base classes hain jinse directly object nahi bana sakte. Ye blueprint provide karte hain child classes ke liye.
+### Abstract Classes
 
 ```typescript
-// Abstract class - directly instantiate nahi kar sakte
 abstract class Animal {
     constructor(public name: string) {}
 
-    // Normal method
     move(): void {
-        console.log(`${this.name} move kar raha hai`);
+        console.log(`${this.name} is moving`);
     }
 
-    // Abstract method - child class mein implementation zaroori hai
-    abstract makeSound(): void;
+    abstract makeSound(): void; // Must be implemented by child
 }
 
-// Concrete class - abstract class ko extend kar raha
 class Dog extends Animal {
-    // Abstract method ka implementation zaroori hai
     makeSound(): void {
-        console.log(`${this.name} bhow bhow kar raha hai`);
-    }
-
-    fetch(): void {
-        console.log(`${this.name} ball la raha hai`);
+        console.log(`${this.name} barks`);
     }
 }
 
-class Cat extends Animal {
-    makeSound(): void {
-        console.log(`${this.name} meow kar rahi hai`);
-    }
-}
-
-// let animal = new Animal("Generic"); // Error! Abstract class hai
-
+// let animal = new Animal("Generic"); // Error!
 let dog = new Dog("Tommy");
-dog.move(); // "Tommy move kar raha hai"
-dog.makeSound(); // "Tommy bhow bhow kar raha hai"
-dog.fetch();
+dog.makeSound();
+```
 
-let cat = new Cat("Fluffy");
-cat.makeSound(); // "Fluffy meow kar rahi hai"
+### Implementing Interfaces
 
-// Real-world example
-abstract class Shape {
-    constructor(public color: string) {}
-
-    abstract calculateArea(): number;
-    abstract calculatePerimeter(): number;
-
-    describe(): void {
-        console.log(`Ye ${this.color} color ki shape hai`);
-    }
+```typescript
+interface Printable {
+    print(): void;
 }
 
-class Circle extends Shape {
-    constructor(color: string, public radius: number) {
-        super(color);
-    }
-
-    calculateArea(): number {
-        return Math.PI * this.radius * this.radius;
-    }
-
-    calculatePerimeter(): number {
-        return 2 * Math.PI * this.radius;
-    }
+interface Loggable {
+    log(message: string): void;
 }
 
-class Rectangle extends Shape {
-    constructor(color: string, public width: number, public height: number) {
-        super(color);
+class Document implements Printable, Loggable {
+    constructor(private content: string) {}
+
+    print(): void {
+        console.log(this.content);
     }
 
-    calculateArea(): number {
-        return this.width * this.height;
-    }
-
-    calculatePerimeter(): number {
-        return 2 * (this.width + this.height);
+    log(message: string): void {
+        console.log(`Log: ${message}`);
     }
 }
-
-let circle = new Circle("red", 5);
-circle.describe();
-console.log("Area:", circle.calculateArea());
-
-let rectangle = new Rectangle("blue", 4, 6);
-rectangle.describe();
-console.log("Area:", rectangle.calculateArea());
 ```
 
 ---
 
-## ⚡ Day 6 - Advanced TypeScript Concepts
+## ⚡ Functions in TypeScript
 
-### 🧠 Functions
-
-#### Function Types
-
-**Kya hai?** Function ki type define karna - parameters aur return type specify karna.
+### Function Types
 
 ```typescript
 // Function type definition
 let add: (a: number, b: number) => number;
 
-add = (x, y) => {
-    return x + y;
-};
+add = (x, y) => x + y;
 
-console.log(add(5, 3)); // 8
-
-// Function type as alias
+// Type alias for functions
 type MathOperation = (a: number, b: number) => number;
 
 let multiply: MathOperation = (x, y) => x * y;
-let divide: MathOperation = (x, y) => x / y;
-
-// Function type in interface
-interface Calculator {
-    operation: (a: number, b: number) => number;
-}
-
-let calc: Calculator = {
-    operation: (a, b) => a + b
-};
 ```
 
-#### Optional & Default Parameters
-
-**Optional Parameters:** Question mark (`?`) se - provide karna zaroori nahi.
+### Optional & Default Parameters
 
 ```typescript
-// Optional parameter
+// Optional parameters
 function greet(name: string, greeting?: string) {
-    if (greeting) {
-        return `${greeting}, ${name}!`;
-    }
-    return `Hello, ${name}!`;
+    return greeting ? `${greeting}, ${name}` : `Hello, ${name}`;
 }
 
-console.log(greet("Raj")); // "Hello, Raj!"
-console.log(greet("Raj", "Namaste")); // "Namaste, Raj!"
-
-// Default parameters - agar value nahi di to ye use hoga
-function createUser(name: string, age: number = 18, city: string = "Mumbai") {
+// Default parameters
+function createUser(name: string, age: number = 18, city = "Mumbai") {
     return { name, age, city };
 }
 
-console.log(createUser("Amit")); 
-// { name: "Amit", age: 18, city: "Mumbai" }
-
-console.log(createUser("Priya", 25)); 
-// { name: "Priya", age: 25, city: "Mumbai" }
-
-console.log(createUser("Rohan", 30, "Delhi")); 
-// { name: "Rohan", age: 30, city: "Delhi" }
-
-// Optional must come after required parameters
-function register(name: string, email?: string, age?: number) {
-    // Valid order
-}
-
-// function badOrder(name?: string, age: number) {} // Error!
+console.log(createUser("Amit"));
+console.log(createUser("Priya", 25, "Delhi"));
 ```
 
-#### Rest Parameters
-
-**Kya hai?** Variable number of arguments accept karna - array ki tarah treat hote hain.
+### Rest Parameters
 
 ```typescript
-// Rest parameters - 3 dots se
 function sum(...numbers: number[]): number {
     return numbers.reduce((total, num) => total + num, 0);
 }
 
 console.log(sum(1, 2, 3)); // 6
 console.log(sum(10, 20, 30, 40)); // 100
-console.log(sum(5)); // 5
 
-// Mixed parameters - rest parameter last mein hona chahiye
-function makeAnnouncement(title: string, ...points: string[]) {
-    console.log(`Announcement: ${title}`);
-    points.forEach((point, i) => {
-        console.log(`${i + 1}. ${point}`);
-    });
+// Mixed parameters
+function announce(title: string, ...points: string[]) {
+    console.log(title);
+    points.forEach(p => console.log(`- ${p}`));
 }
-
-makeAnnouncement(
-    "Meeting Notice",
-    "Meeting at 3 PM",
-    "Bring your laptops",
-    "Attendance is mandatory"
-);
-
-// Practical example
-function createFullName(firstName: string, lastName: string, ...middleNames: string[]): string {
-    return [firstName, ...middleNames, lastName].join(" ");
-}
-
-console.log(createFullName("Amit", "Sharma")); 
-// "Amit Sharma"
-
-console.log(createFullName("Amit", "Kumar", "Sharma")); 
-// "Amit Kumar Sharma"
-
-console.log(createFullName("Raj", "Kumar", "Singh", "Patel")); 
-// "Raj Kumar Singh Patel"
 ```
 
-#### Function Overloads
-
-**Kya hai?** Same function name ke saath different parameter types/counts ke liye alag-alag signatures.
+### Function Overloads
 
 ```typescript
 // Overload signatures
@@ -1135,97 +728,67 @@ function processInput(input: string): string;
 function processInput(input: number): number;
 function processInput(input: boolean): string;
 
-// Implementation signature
+// Implementation
 function processInput(input: string | number | boolean): string | number {
-    if (typeof input === "string") {
-        return input.toUpperCase();
-    } else if (typeof input === "number") {
-        return input * 2;
-    } else {
-        return input ? "YES" : "NO";
-    }
+    if (typeof input === "string") return input.toUpperCase();
+    if (typeof input === "number") return input * 2;
+    return input ? "YES" : "NO";
 }
 
 console.log(processInput("hello")); // "HELLO"
 console.log(processInput(5)); // 10
-console.log(processInput(true)); // "YES"
-
-// Practical example - different ways to create a date
-function createDate(timestamp: number): Date;
-function createDate(year: number, month: number, day: number): Date;
-function createDate(dateString: string): Date;
-
-function createDate(a: number | string, b?: number, c?: number): Date {
-    if (typeof a === "string") {
-        return new Date(a);
-    } else if (b !== undefined && c !== undefined) {
-        return new Date(a, b - 1, c); // month 0-indexed hai
-    } else {
-        return new Date(a);
-    }
-}
-
-console.log(createDate(1609459200000)); // Timestamp se
-console.log(createDate(2024, 1, 15)); // Year, month, day se
-console.log(createDate("2024-01-15")); // String se
-
-// Real-world example - search function
-function search(query: string): string[];
-function search(query: string, limit: number): string[];
-function search(query: string, category: string, limit: number): string[];
-
-function search(query: string, categoryOrLimit?: string | number, limit?: number): string[] {
-    console.log(`Searching for: ${query}`);
-    
-    if (typeof categoryOrLimit === "number") {
-        console.log(`Limit: ${categoryOrLimit}`);
-    } else if (typeof categoryOrLimit === "string") {
-        console.log(`Category: ${categoryOrLimit}, Limit: ${limit}`);
-    }
-    
-    return ["result1", "result2"]; // Dummy results
-}
-
-search("laptop");
-search("laptop", 10);
-search("laptop", "electronics", 10);
 ```
 
-### ⚙️ Generics
-
-#### Generic Functions
-
-**Kya hai?** Functions jo kisi bhi type ke saath kaam kar sakein - type parameter use karke.
+### Arrow Functions
 
 ```typescript
-// Generic function - <T> ek type parameter hai
+// Arrow function syntax
+const add = (a: number, b: number): number => a + b;
+
+const greet = (name: string): string => {
+    return `Hello, ${name}`;
+};
+
+// 'this' context preservation
+class Handler {
+    message = "Hello";
+
+    // Arrow function preserves 'this'
+    delayedGreet = () => {
+        setTimeout(() => {
+            console.log(this.message);
+        }, 1000);
+    }
+}
+```
+
+---
+
+## ⚡ Generics
+
+### Generic Functions
+
+```typescript
+// Generic function
 function identity<T>(value: T): T {
     return value;
 }
 
-// Different types ke saath use kar sakte hain
 let num = identity<number>(42);
 let str = identity<string>("Hello");
-let bool = identity<boolean>(true);
+let auto = identity(100); // Type inference
 
-// Type inference se bhi kaam karega
-let auto = identity(100); // TypeScript samajh jayega ki number hai
-
-// Practical example - array ka first element
+// Array operations
 function getFirstElement<T>(arr: T[]): T | undefined {
     return arr[0];
 }
-
-let firstNum = getFirstElement([1, 2, 3]); // Type: number | undefined
-let firstName = getFirstElement(["a", "b", "c"]); // Type: string | undefined
 
 // Multiple type parameters
 function pair<T, U>(first: T, second: U): [T, U] {
     return [first, second];
 }
 
-let nameAge = pair<string, number>("Raj", 25);
-let cityCountry = pair("Mumbai", "India"); // Type inference
+let nameAge = pair("Raj", 25);
 
 // Generic with constraints
 interface HasLength {
@@ -1233,69 +796,29 @@ interface HasLength {
 }
 
 function logLength<T extends HasLength>(item: T): void {
-    console.log(`Length: ${item.length}`);
+    console.log(item.length);
 }
 
-logLength("Hello"); // String has length
-logLength([1, 2, 3]); // Array has length
-logLength({ length: 10, name: "Test" }); // Object with length property
-// logLength(123); // Error! Number doesn't have length
+logLength("Hello");
+logLength([1, 2, 3]);
 ```
 
-#### Generic Interfaces
-
-**Kya hai?** Interfaces mein bhi generics use kar sakte hain.
+### Generic Interfaces
 
 ```typescript
-// Generic interface
 interface Container<T> {
     value: T;
     getValue(): T;
     setValue(val: T): void;
 }
 
-// Number container
 let numberContainer: Container<number> = {
     value: 100,
-    getValue() {
-        return this.value;
-    },
-    setValue(val) {
-        this.value = val;
-    }
+    getValue() { return this.value; },
+    setValue(val) { this.value = val; }
 };
 
-numberContainer.setValue(200);
-console.log(numberContainer.getValue()); // 200
-
-// String container
-let stringContainer: Container<string> = {
-    value: "Hello",
-    getValue() {
-        return this.value;
-    },
-    setValue(val) {
-        this.value = val;
-    }
-};
-
-// Generic interface with multiple type parameters
-interface KeyValuePair<K, V> {
-    key: K;
-    value: V;
-}
-
-let userAge: KeyValuePair<string, number> = {
-    key: "Amit",
-    value: 25
-};
-
-let setting: KeyValuePair<string, boolean> = {
-    key: "darkMode",
-    value: true
-};
-
-// API response interface
+// API Response interface
 interface ApiResponse<T> {
     data: T;
     status: number;
@@ -1305,41 +828,20 @@ interface ApiResponse<T> {
 interface User {
     id: number;
     name: string;
-    email: string;
 }
 
-let userResponse: ApiResponse<User> = {
-    data: {
-        id: 1,
-        name: "Raj",
-        email: "raj@example.com"
-    },
-    status: 200,
-    message: "Success"
-};
-
-let usersResponse: ApiResponse<User[]> = {
-    data: [
-        { id: 1, name: "Raj", email: "raj@example.com" },
-        { id: 2, name: "Priya", email: "priya@example.com" }
-    ],
+let response: ApiResponse<User> = {
+    data: { id: 1, name: "Raj" },
     status: 200,
     message: "Success"
 };
 ```
 
-#### Generic Classes
-
-**Kya hai?** Classes mein generics use karke reusable code banana.
+### Generic Classes
 
 ```typescript
-// Generic class
 class Box<T> {
-    private content: T;
-
-    constructor(value: T) {
-        this.content = value;
-    }
+    constructor(private content: T) {}
 
     getContent(): T {
         return this.content;
@@ -1350,20 +852,10 @@ class Box<T> {
     }
 }
 
-// Different types ke boxes
 let numberBox = new Box<number>(123);
-console.log(numberBox.getContent()); // 123
-
 let stringBox = new Box<string>("Hello");
-console.log(stringBox.getContent()); // "Hello"
 
-let userBox = new Box<User>({
-    id: 1,
-    name: "Amit",
-    email: "amit@example.com"
-});
-
-// Generic Stack implementation
+// Generic Stack
 class Stack<T> {
     private items: T[] = [];
 
@@ -1378,67 +870,46 @@ class Stack<T> {
     peek(): T | undefined {
         return this.items[this.items.length - 1];
     }
-
-    isEmpty(): boolean {
-        return this.items.length === 0;
-    }
-
-    size(): number {
-        return this.items.length;
-    }
 }
 
 let numberStack = new Stack<number>();
 numberStack.push(1);
 numberStack.push(2);
-numberStack.push(3);
-console.log(numberStack.pop()); // 3
-console.log(numberStack.peek()); // 2
-
-let stringStack = new Stack<string>();
-stringStack.push("first");
-stringStack.push("second");
-console.log(stringStack.size()); // 2
-
-// Generic with constraints in class
-class DataStore<T extends { id: number }> {
-    private data: T[] = [];
-
-    add(item: T): void {
-        this.data.push(item);
-    }
-
-    findById(id: number): T | undefined {
-        return this.data.find(item => item.id === id);
-    }
-
-    getAll(): T[] {
-        return this.data;
-    }
-}
-
-let userStore = new DataStore<User>();
-userStore.add({ id: 1, name: "Raj", email: "raj@example.com" });
-userStore.add({ id: 2, name: "Priya", email: "priya@example.com" });
-
-console.log(userStore.findById(1));
 ```
 
-### 📦 Modules
+### Generic Constraints
 
-#### Importing and Exporting Modules
-
-**Kya hai?** Code ko alag-alag files mein organize karna aur unhe import/export karna.
-
-**File 1: `math.ts` (Named Exports)**
 ```typescript
-// Named exports - multiple exports ek file se
-export function add(a: number, b: number): number {
-    return a + b;
+// Constraint using interface
+interface HasId {
+    id: number;
 }
 
-export function subtract(a: number, b: number): number {
-    return a - b;
+function findById<T extends HasId>(items: T[], id: number): T | undefined {
+    return items.find(item => item.id === id);
+}
+
+// Constraint using keyof
+function getProperty<T, K extends keyof T>(obj: T, key: K): T[K] {
+    return obj[key];
+}
+
+let user = { id: 1, name: "Raj", email: "raj@example.com" };
+let name = getProperty(user, "name"); // Valid
+// let invalid = getProperty(user, "phone"); // Error!
+```
+
+---
+
+## ⚡ Modules
+
+### Importing and Exporting
+
+**Named Exports:**
+```typescript
+// math.ts
+export function add(a: number, b: number): number {
+    return a + b;
 }
 
 export const PI = 3.14159;
@@ -1449,388 +920,210 @@ export class Calculator {
     }
 }
 
-// Ya fir ek saath export kar sakte hain
-// export { add, subtract, PI, Calculator };
-```
+// app.ts
+import { add, PI, Calculator } from './math';
 
-**File 2: `app.ts` (Importing)**
-```typescript
-// Named imports
-import { add, subtract, PI } from './math';
+// Alias
+import { add as sum } from './math';
 
-console.log(add(5, 3)); // 8
-console.log(subtract(10, 4)); // 6
-console.log(PI); // 3.14159
-
-// Alias ke saath import
-import { add as sum, subtract as minus } from './math';
-
-console.log(sum(2, 3)); // 5
-console.log(minus(10, 5)); // 5
-
-// Sab kuch ek saath import
+// Import all
 import * as MathUtils from './math';
-
-console.log(MathUtils.add(1, 2));
-console.log(MathUtils.PI);
-let calc = new MathUtils.Calculator();
 ```
 
-#### Default Exports
-
-**Kya hai?** Ek file se sirf ek cheez default export kar sakte hain.
-
-**File 1: `user.ts` (Default Export)**
+**Default Exports:**
 ```typescript
-// Default export - ek file se ek hi default export ho sakta
+// user.ts
 export default class User {
-    constructor(
-        public name: string,
-        public email: string
-    ) {}
-
-    displayInfo() {
-        console.log(`${this.name} - ${this.email}`);
-    }
+    constructor(public name: string) {}
 }
 
-// Ya function ko default export
-// export default function createUser(name: string) {
-//     return new User(name, `${name}@example.com`);
-// }
-```
-
-**File 2: `app.ts` (Importing Default)**
-```typescript
-// Default import - koi bhi naam de sakte hain
+// app.ts
 import User from './user';
 
-let user = new User("Raj", "raj@example.com");
-user.displayInfo();
+// Mixed exports
+export default function main() {}
+export function helper() {}
 
-// Default aur named exports ek saath
-// File: utils.ts
-export default function mainFunction() {
-    console.log("Main function");
-}
-
-export function helperFunction() {
-    console.log("Helper function");
-}
-
-// Import karna
-import mainFn, { helperFunction } from './utils';
-
-mainFn();
-helperFunction();
+import mainFn, { helper } from './utils';
 ```
 
-#### Code Organization with Modules
-
-**Practical Example - Project Structure:**
+### Re-exporting
 
 ```typescript
-// File: models/user.model.ts
-export interface IUser {
-    id: number;
-    name: string;
-    email: string;
-}
+// models/index.ts
+export { User } from './user';
+export { Product } from './product';
+export * from './common';
 
-export class User implements IUser {
-    constructor(
-        public id: number,
-        public name: string,
-        public email: string
-    ) {}
-}
-
-// File: services/user.service.ts
-import { User, IUser } from '../models/user.model';
-
-export class UserService {
-    private users: User[] = [];
-
-    addUser(user: IUser): void {
-        this.users.push(new User(user.id, user.name, user.email));
-    }
-
-    getUserById(id: number): User | undefined {
-        return this.users.find(u => u.id === id);
-    }
-
-    getAllUsers(): User[] {
-        return this.users;
-    }
-}
-
-// File: utils/validators.ts
-export function isValidEmail(email: string): boolean {
-    return email.includes('@');
-}
-
-export function isValidId(id: number): boolean {
-    return id > 0;
-}
-
-// File: index.ts (Main file)
-import { UserService } from './services/user.service';
-import { isValidEmail, isValidId } from './utils/validators';
-
-let userService = new UserService();
-
-if (isValidId(1) && isValidEmail("test@example.com")) {
-    userService.addUser({
-        id: 1,
-        name: "Raj",
-        email: "test@example.com"
-    });
-}
-
-console.log(userService.getAllUsers());
+// app.ts
+import { User, Product } from './models';
 ```
 
-### 🔒 Type Assertions & Guards
+---
 
-#### Type Assertion & Type Casting
+## ⚡ Type Assertions & Type Guards
 
-**Kya hai?** TypeScript ko batana ki hum type ke baare mein zyada jaante hain.
-
-```typescript
-// Type Assertion - 'as' syntax (recommended)
-let someValue: unknown = "Hello TypeScript";
-let strLength: number = (someValue as string).length;
-
-console.log(strLength); // 16
-
-// Angle bracket syntax (JSX mein kaam nahi karta)
-let anotherValue: unknown = "Test";
-let len: number = (<string>anotherValue).length;
-
-// Practical example - DOM manipulation
-let inputElement = document.getElementById('username') as HTMLInputElement;
-inputElement.value = "Raj"; // Ab safely access kar sakte hain
-
-// Object type assertion
-interface User {
-    name: string;
-    age: number;
-}
-
-let userData: unknown = {
-    name: "Amit",
-    age: 25
-};
-
-let user = userData as User;
-console.log(user.name); // "Amit"
-
-// Type assertion with API response
-interface ApiResponse {
-    data: any;
-}
-
-let response: ApiResponse = {
-    data: { id: 1, title: "Post 1" }
-};
-
-interface Post {
-    id: number;
-    title: string;
-}
-
-let post = response.data as Post;
-console.log(post.title);
-```
-
-#### Non-null Assertion Operator
-
-**Kya hai?** TypeScript ko batana ki value null/undefined nahi hai (!) operator se.
+### Type Assertion
 
 ```typescript
-// Non-null assertion operator (!)
-function getValue(): string | null {
-    return "Hello";
-}
-
-let value = getValue();
-// console.log(value.length); // Error! value null ho sakta hai
-
-// Non-null assertion - hum guarantee de rahe hain ki null nahi hai
-let definiteValue = getValue()!;
-console.log(definiteValue.length); // No error
+// 'as' syntax (recommended)
+let someValue: unknown = "Hello";
+let strLength = (someValue as string).length;
 
 // DOM example
-let button = document.getElementById('btn')!; // Guarantee hai ki element milega
-button.addEventListener('click', () => {
-    console.log('Clicked!');
-});
+let input = document.getElementById('username') as HTMLInputElement;
+input.value = "Raj";
 
-// Array access
-let numbers = [1, 2, 3, 4, 5];
-let lastNumber = numbers[numbers.length - 1]!;
-
-// ⚠️ Warning: Carefully use karo - runtime error aa sakta hai agar galat guarantee di
+// Non-null assertion (!)
+let value = getValue()!; // Guarantee it's not null
 ```
 
-#### Type Guards
+### Type Guards
 
-**Kya hai?** Runtime par types check karna - safe operations ke liye.
-
-**`typeof` Type Guard:**
+**typeof:**
 ```typescript
 function processValue(value: string | number) {
-    // typeof type guard
     if (typeof value === "string") {
-        // Is block mein TypeScript jaanta hai ki value string hai
         console.log(value.toUpperCase());
     } else {
-        // Yaha TypeScript jaanta hai ki value number hai
         console.log(value.toFixed(2));
     }
 }
-
-processValue("hello"); // "HELLO"
-processValue(42.567); // "42.57"
-
-// Multiple types check karna
-function display(input: string | number | boolean) {
-    if (typeof input === "string") {
-        console.log("String:", input.toUpperCase());
-    } else if (typeof input === "number") {
-        console.log("Number:", input * 2);
-    } else {
-        console.log("Boolean:", input ? "YES" : "NO");
-    }
-}
 ```
 
-**`instanceof` Type Guard:**
+**instanceof:**
 ```typescript
 class Dog {
-    bark() {
-        console.log("Bhow bhow!");
-    }
+    bark() { console.log("Bhow!"); }
 }
 
 class Cat {
-    meow() {
-        console.log("Meow!");
-    }
+    meow() { console.log("Meow!"); }
 }
 
 function makeSound(animal: Dog | Cat) {
-    // instanceof type guard
     if (animal instanceof Dog) {
-        animal.bark(); // Safe - TypeScript jaanta hai ye Dog hai
+        animal.bark();
     } else {
-        animal.meow(); // Safe - TypeScript jaanta hai ye Cat hai
-    }
-}
-
-let myDog = new Dog();
-let myCat = new Cat();
-
-makeSound(myDog); // "Bhow bhow!"
-makeSound(myCat); // "Meow!"
-
-// Date example
-function formatDate(date: Date | string) {
-    if (date instanceof Date) {
-        return date.toLocaleDateString();
-    } else {
-        return new Date(date).toLocaleDateString();
+        animal.meow();
     }
 }
 ```
 
-**Custom Type Guards:**
-```typescript
-// Custom type guard function
-interface Car {
-    drive(): void;
-    wheels: number;
-}
-
-interface Boat {
-    sail(): void;
-    hasMotor: boolean;
-}
-
-// Type predicate function (return type: 'parameter is Type')
-function isCar(vehicle: Car | Boat): vehicle is Car {
-    return (vehicle as Car).drive !== undefined;
-}
-
-function operateVehicle(vehicle: Car | Boat) {
-    if (isCar(vehicle)) {
-        vehicle.drive(); // TypeScript jaanta hai ye Car hai
-        console.log(`Wheels: ${vehicle.wheels}`);
-    } else {
-        vehicle.sail(); // TypeScript jaanta hai ye Boat hai
-        console.log(`Has motor: ${vehicle.hasMotor}`);
-    }
-}
-
-// Array type guard
-function isStringArray(value: unknown): value is string[] {
-    return Array.isArray(value) && value.every(item => typeof item === "string");
-}
-
-function processArray(arr: unknown) {
-    if (isStringArray(arr)) {
-        // Ab safely string array methods use kar sakte hain
-        arr.forEach(str => console.log(str.toUpperCase()));
-    }
-}
-```
-
-**`in` Operator Type Guard:**
+**in operator:**
 ```typescript
 interface Admin {
     name: string;
     privileges: string[];
 }
 
-interface Employee {
+interface User {
     name: string;
-    startDate: Date;
+    email: string;
 }
 
-type UnknownEmployee = Admin | Employee;
-
-function printEmployeeInfo(emp: UnknownEmployee) {
-    console.log(`Name: ${emp.name}`);
+function printInfo(person: Admin | User) {
+    console.log(person.name);
     
-    // 'in' operator se property check karo
-    if ('privileges' in emp) {
-        console.log(`Privileges: ${emp.privileges.join(', ')}`);
+    if ('privileges' in person) {
+        console.log(person.privileges);
     }
     
-    if ('startDate' in emp) {
-        console.log(`Start Date: ${emp.startDate.toDateString()}`);
+    if ('email' in person) {
+        console.log(person.email);
     }
 }
-
-let admin: Admin = {
-    name: "Raj",
-    privileges: ["create-server", "delete-user"]
-};
-
-let employee: Employee = {
-    name: "Amit",
-    startDate: new Date()
-};
-
-printEmployeeInfo(admin);
-printEmployeeInfo(employee);
 ```
 
-### 🧩 Utility Types
+**Custom Type Guards:**
+```typescript
+interface Car {
+    drive(): void;
+}
 
-#### `Partial<T>`
+interface Boat {
+    sail(): void;
+}
 
-**Kya hai?** Type ki saari properties ko optional bana deta hai.
+function isCar(vehicle: Car | Boat): vehicle is Car {
+    return (vehicle as Car).drive !== undefined;
+}
+
+function operate(vehicle: Car | Boat) {
+    if (isCar(vehicle)) {
+        vehicle.drive();
+    } else {
+        vehicle.sail();
+    }
+}
+```
+
+---
+
+## ⚡ Utility Types
+
+### `Partial<T>`
+
+Sabhi properties ko optional bana deta hai.
+
+```typescript
+interface User {
+    id: number;
+    name: string;
+    email: string;
+}
+
+type PartialUser = Partial<User>;
+
+function updateUser(id: number, updates: Partial<User>) {
+    console.log(`Updating user ${id}`, updates);
+}
+
+updateUser(1, { name: "Raj" });
+updateUser(2, { email: "new@example.com" });
+```
+
+### `Required<T>`
+
+Sabhi properties ko mandatory bana deta hai.
+
+```typescript
+interface Config {
+    host?: string;
+    port?: number;
+}
+
+type RequiredConfig = Required<Config>;
+
+let config: RequiredConfig = {
+    host: "localhost",
+    port: 3000 // Dono zaroori
+};
+```
+
+### `Readonly<T>`
+
+Sabhi properties ko readonly bana deta hai.
+
+```typescript
+interface User {
+    id: number;
+    name: string;
+}
+
+type ReadonlyUser = Readonly<User>;
+
+let user: ReadonlyUser = {
+    id: 1,
+    name: "Raj"
+};
+
+// user.name = "New"; // Error!
+```
+
+### `Pick<T, K>`
+
+Specific properties select karna.
 
 ```typescript
 interface User {
@@ -1840,100 +1133,318 @@ interface User {
     age: number;
 }
 
-// Partial - sabhi properties optional ban jaati hain
-type PartialUser = Partial<User>;
+type UserPreview = Pick<User, 'id' | 'name'>;
 
-// Equivalent to:
-// {
-//     id?: number;
-//     name?: string;
-//     email?: string;
-//     age?: number;
-// }
-
-// Update function mein useful
-function updateUser(id: number, updates: Partial<User>) {
-    // Sirf jo properties di gayi hain wo update hongi
-    console.log(`Updating user ${id}`, updates);
-}
-
-updateUser(1, { name: "Raj" }); // Sirf name update
-updateUser(2, { email: "new@example.com", age: 26 }); // Email aur age update
-
-// Practical example - form updates
-interface Product {
-    id: number;
-    title: string;
-    price: number;
-    description: string;
-    category: string;
-}
-
-function updateProduct(productId: number, changes: Partial<Product>) {
-    // Database mein sirf jo fields changed hain wo update karo
-    console.log(`Updating product ${productId}:`, changes);
-}
-
-updateProduct(101, { price: 999 });
-updateProduct(102, { title: "New Title", description: "New Description" });
+let preview: UserPreview = {
+    id: 1,
+    name: "Raj"
+};
 ```
 
-#### `Required<T>`
+### `Omit<T, K>`
 
-**Kya hai?** Type ki saari properties ko required (mandatory) bana deta hai.
+Specific properties remove karna.
 
 ```typescript
-interface UserProfile {
-    name?: string;
-    email?: string;
-    phone?: string;
-    address?: string;
+interface User {
+    id: number;
+    name: string;
+    email: string;
+    password: string;
 }
 
-// Required - sabhi properties mandatory ban jaati hain
-type CompleteProfile = Required<UserProfile>;
+type UserWithoutPassword = Omit<User, 'password'>;
 
-// Equivalent to:
-// {
-//     name: string;
-//     email: string;
-//     phone: string;
-//     address: string;
-// }
-
-function createCompleteProfile(profile: CompleteProfile) {
-    // Sabhi fields zaroori hain
-    console.log("Complete profile:", profile);
-}
-
-// createCompleteProfile({ name: "Raj" }); // Error! Sabhi fields chahiye
-
-createCompleteProfile({
+let safeUser: UserWithoutPassword = {
+    id: 1,
     name: "Raj",
-    email: "raj@example.com",
-    phone: "9876543210",
-    address: "Mumbai"
-}); // Valid
+    email: "raj@example.com"
+};
+```
 
-// Practical example - config validation
-interface AppConfig {
-    apiUrl?: string;
-    timeout?: number;
-    retries?: number;
-}
+### `Record<K, T>`
 
-type ValidatedConfig = Required<AppConfig>;
+Key-value pairs ka type create karna.
 
-function validateConfig(config: AppConfig): config is ValidatedConfig {
-    return config.apiUrl !== undefined &&
-           config.timeout !== undefined &&
-           config.retries !== undefined;
+```typescript
+type Role = 'admin' | 'user' | 'guest';
+
+type RolePermissions = Record<Role, string[]>;
+
+let permissions: RolePermissions = {
+    admin: ['create', 'read', 'update', 'delete'],
+    user: ['read', 'update'],
+    guest: ['read']
+};
+
+// Dictionary pattern
+type StringDictionary = Record<string, string>;
+
+let dict: StringDictionary = {
+    name: "Raj",
+    city: "Mumbai"
+};
+```
+
+### `Exclude<T, U>` & `Extract<T, U>`
+
+```typescript
+// Exclude - Remove types from union
+type T1 = Exclude<'a' | 'b' | 'c', 'a'>; // 'b' | 'c'
+type T2 = Exclude<string | number | boolean, boolean>; // string | number
+
+// Extract - Keep only matching types
+type T3 = Extract<'a' | 'b' | 'c', 'a' | 'f'>; // 'a'
+type T4 = Extract<string | number | boolean, boolean>; // boolean
+```
+
+### `NonNullable<T>`
+
+Null aur undefined remove karna.
+
+```typescript
+type T1 = NonNullable<string | number | null | undefined>; // string | number
+
+function process(value: string | null | undefined) {
+    let safe: NonNullable<typeof value> = value!;
 }
 ```
 
-#### `Readonly<T>`
+### `ReturnType<T>` & `Parameters<T>`
 
-**Kya hai?** Type ki saari properties ko readonly bana deta hai - modify nahi kar sakte.
+```typescript
+// ReturnType - function ki return type nikalna
+function getUser() {
+    return { id: 1, name: "Raj" };
+}
+
+type User = ReturnType<typeof getUser>; // { id: number; name: string }
+
+// Parameters - function ke parameters ki tuple type
+function createUser(name: string, age: number) {
+    return { name, age };
+}
+
+type CreateUserParams = Parameters<typeof createUser>; // [string, number]
+
+let params: CreateUserParams = ["Raj", 25];
+```
+
+---
+
+## ⚡ Advanced Types
+
+### Discriminated Unions
+
+**Kya hai?** Common property (discriminant) se type differentiate karna.
+
+```typescript
+interface Circle {
+    kind: "circle"; // Discriminant
+    radius: number;
+}
+
+interface Square {
+    kind: "square"; // Discriminant
+    sideLength: number;
+}
+
+interface Rectangle {
+    kind: "rectangle"; // Discriminant
+    width: number;
+    height: number;
+}
+
+type Shape = Circle | Square | Rectangle;
+
+function getArea(shape: Shape): number {
+    switch (shape.kind) {
+        case "circle":
+            return Math.PI * shape.radius ** 2;
+        case "square":
+            return shape.sideLength ** 2;
+        case "rectangle":
+            return shape.width * shape.height;
+        default:
+            const _exhaustive: never = shape;
+            return _exhaustive;
+    }
+}
+
+// Practical example - API responses
+interface SuccessResponse {
+    status: "success";
+    data: any;
+}
+
+interface ErrorResponse {
+    status: "error";
+    error: string;
+}
+
+type ApiResponse = SuccessResponse | ErrorResponse;
+
+function handleResponse(response: ApiResponse) {
+    if (response.status === "success") {
+        console.log(response.data);
+    } else {
+        console.error(response.error);
+    }
+}
+```
+
+### Mapped Types
+
+**Kya hai?** Existing type se naya type banana by transforming properties.
+
+```typescript
+// Basic mapped type
+type Readonly<T> = {
+    readonly [P in keyof T]: T[P];
+};
+
+type Optional<T> = {
+    [P in keyof T]?: T[P];
+};
+
+// Practical example
+interface User {
+    id: number;
+    name: string;
+    email: string;
+}
+
+type ReadonlyUser = Readonly<User>;
+type OptionalUser = Optional<User>;
+
+// Custom mapped type - make all properties nullable
+type Nullable<T> = {
+    [P in keyof T]: T[P] | null;
+};
+
+type NullableUser = Nullable<User>;
+
+// Add prefix to keys
+type Getters<T> = {
+    [P in keyof T as `get${Capitalize<string & P>}`]: () => T[P];
+};
+
+type UserGetters = Getters<User>;
+// {
+//     getId: () => number;
+//     getName: () => string;
+//     getEmail: () => string;
+// }
+```
+
+### Conditional Types
+
+**Kya hai?** Condition ke basis par type decide karna.
+
+```typescript
+// Basic syntax: T extends U ? X : Y
+
+type IsString<T> = T extends string ? true : false;
+
+type T1 = IsString<string>; // true
+type T2 = IsString<number>; // false
+
+// Extract array element type
+type ElementType<T> = T extends (infer U)[] ? U : T;
+
+type T3 = ElementType<string[]>; // string
+type T4 = ElementType<number>; // number
+
+// Practical example - extract return type
+type ReturnType<T> = T extends (...args: any[]) => infer R ? R : never;
+
+function getUser() {
+    return { id: 1, name: "Raj" };
+}
+
+type User = ReturnType<typeof getUser>;
+
+// Nested conditional types
+type TypeName<T> = 
+    T extends string ? "string" :
+    T extends number ? "number" :
+    T extends boolean ? "boolean" :
+    T extends undefined ? "undefined" :
+    T extends Function ? "function" :
+    "object";
+
+type T5 = TypeName<string>; // "string"
+type T6 = TypeName<number>; // "number"
+
+// Distributive conditional types
+type ToArray<T> = T extends any ? T[] : never;
+
+type T7 = ToArray<string | number>; // string[] | number[]
+```
+
+### Template Literal Types
+
+**Kya hai?** String literal types ko combine karke naye types banana.
+
+```typescript
+// Basic template literal type
+type Greeting = `Hello ${string}`;
+
+let greet1: Greeting = "Hello World"; // Valid
+let greet2: Greeting = "Hello TypeScript"; // Valid
+// let greet3: Greeting = "Hi World"; // Error!
+
+// Combining literal types
+type Direction = "left" | "right" | "top" | "bottom";
+type Padding = `padding-${Direction}`;
+
+let padding: Padding = "padding-left"; // Valid
+
+// Practical example - CSS properties
+type Size = "small" | "medium" | "large";
+type Color = "red" | "blue" | "green";
+
+type ButtonClass = `btn-${Size}-${Color}`;
+
+let btnClass: ButtonClass = "btn-small-red";
+
+// Uppercase/Lowercase/Capitalize/Uncapitalize
+type UpperGreeting = Uppercase<"hello">; // "HELLO"
+type LowerGreeting = Lowercase<"HELLO">; // "hello"
+type CapitalGreeting = Capitalize<"hello">; // "Hello"
+type UncapitalGreeting = Uncapitalize<"Hello">; // "hello"
+
+// Event handler names
+type EventName = "click" | "scroll" | "mousemove";
+type EventHandler = `on${Capitalize<EventName>}`;
+
+let handler: EventHandler = "onClick"; // Valid
+
+// Object with template literal keys
+type PropEventSource<T> = {
+    on<K extends string & keyof T>(
+        eventName: `${K}Changed`,
+        callback: (newValue: T[K]) => void
+    ): void;
+};
+
+declare function makeWatchedObject<T>(obj: T): T & PropEventSource<T>;
+
+let person = makeWatchedObject({
+    firstName: "Raj",
+    age: 25
+});
+
+person.on("firstNameChanged", (newName) => {
+    console.log(`New name: ${newName}`);
+});
+```
+
+---
+
+## ⚡ `keyof` Operator
+
+**Kya hai?** Object type ki sabhi keys ka union type nikalna.
 
 ```typescript
 interface User {
@@ -1942,169 +1453,501 @@ interface User {
     email: string;
 }
 
-// Readonly - sabhi properties read-only ban jaati hain
-type ReadonlyUser = Readonly<User>;
+type UserKeys = keyof User; // "id" | "name" | "email"
 
-// Equivalent to:
-// {
-//     readonly id: number;
-//     readonly name: string;
-//     readonly email: string;
-// }
+let key: UserKeys = "name"; // Valid
+// let invalid: UserKeys = "age"; // Error!
 
-let user: ReadonlyUser = {
-    id: 1,
-    name: "Raj",
-    email: "raj@example.com"
-};
-
-console.log(user.name); // Read kar sakte hain
-// user.name = "New Name"; // Error! Modify nahi kar sakte
-
-// Practical example - immutable data
-interface Config {
-    host: string;
-    port: number;
-    ssl: boolean;
+// Function with keyof
+function getProperty<T, K extends keyof T>(obj: T, key: K): T[K] {
+    return obj[key];
 }
 
-let config: Readonly<Config> = {
-    host: "localhost",
-    port: 3000,
-    ssl: true
-};
+let user = { id: 1, name: "Raj", email: "raj@example.com" };
+let name = getProperty(user, "name"); // Type: string
+let id = getProperty(user, "id"); // Type: number
 
-// config.port = 8080; // Error! Configuration change nahi kar sakte
-
-// Function return type mein readonly
-function getAppConfig(): Readonly<Config> {
-    return {
-        host: "api.example.com",
-        port: 443,
-        ssl: true
-    };
-}
-
-let appConfig = getAppConfig();
-// appConfig.host = "new-host"; // Error! Readonly hai
-```
-
-#### Use of `typeof` and `instanceof`
-
-**`typeof` Operator:**
-```typescript
-// typeof - variable ki type ko type annotation mein use karna
-
-let person = {
-    name: "Raj",
-    age: 25,
-    city: "Mumbai"
-};
-
-// person ki type ko reuse karna
-type Person = typeof person;
-
-let anotherPerson: Person = {
-    name: "Amit",
-    age: 30,
-    city: "Delhi"
-};
-
-// Function type ko capture karna
-function add(a: number, b: number) {
-    return a + b;
-}
-
-type AddFunction = typeof add;
-
-let multiply: AddFunction = (x, y) => x * y;
-
-// Enum ki type
-enum Status {
-    Active = "ACTIVE",
-    Inactive = "INACTIVE"
-}
-
-type StatusType = typeof Status;
-
-// Constant object ko type ki tarah use karna
+// typeof with keyof
 const ROLES = {
     ADMIN: "admin",
     USER: "user",
     GUEST: "guest"
 } as const;
 
-type RoleType = typeof ROLES;
-type Role = typeof ROLES[keyof typeof ROLES];
+type RoleKeys = keyof typeof ROLES; // "ADMIN" | "USER" | "GUEST"
+type RoleValues = typeof ROLES[RoleKeys]; // "admin" | "user" | "guest"
 
-let userRole: Role = "admin"; // Valid
-// let invalidRole: Role = "superuser"; // Error!
+// Index access types
+type User = {
+    id: number;
+    name: string;
+    address: {
+        street: string;
+        city: string;
+    }
+};
+
+type AddressType = User['address']; // { street: string; city: string }
+type IdType = User['id']; // number
 ```
 
-**`instanceof` with Classes:**
+### Type Compatibility
+
+**Kya hai?** TypeScript mein types kab compatible hain.
+
 ```typescript
-class Animal {
-    name: string;
-    
-    constructor(name: string) {
-        this.name = name;
+// Structural typing - shape matters, not name
+interface Point2D {
+    x: number;
+    y: number;
+}
+
+interface Point3D {
+    x: number;
+    y: number;
+    z: number;
+}
+
+let point2D: Point2D = { x: 0, y: 0 };
+let point3D: Point3D = { x: 0, y: 0, z: 0 };
+
+point2D = point3D; // Valid - 3D has all properties of 2D
+// point3D = point2D; // Error - 2D doesn't have z
+
+// Function compatibility
+type Logger = (message: string) => void;
+
+let log: Logger = (msg: string) => {
+    console.log(msg);
+};
+
+// More parameters allowed in implementation
+let logWithTime: Logger = (msg: string, timestamp: Date) => {
+    console.log(`[${timestamp}] ${msg}`);
+};
+
+log = logWithTime; // Valid
+
+// Return type compatibility
+type NumberProducer = () => number;
+type ValueProducer = () => number | string;
+
+let numProducer: NumberProducer = () => 42;
+let valueProducer: ValueProducer = () => 42;
+
+valueProducer = numProducer; // Valid - number is assignable to number | string
+// numProducer = valueProducer; // Error
+```
+
+---
+
+## ⚡ Decorators
+
+**Kya hai?** Special declarations jo classes, methods, properties ko modify karte hain. (Experimental feature - `experimentalDecorators: true` needed in tsconfig)
+
+### Class Decorators
+
+```typescript
+// Class decorator function
+function sealed(constructor: Function) {
+    Object.seal(constructor);
+    Object.seal(constructor.prototype);
+}
+
+@sealed
+class BugReport {
+    type = "report";
+    title: string;
+
+    constructor(title: string) {
+        this.title = title;
     }
 }
 
-class Dog extends Animal {
-    bark() {
-        console.log("Bhow!");
+// Decorator factory (returns decorator)
+function Logger(logString: string) {
+    return function(constructor: Function) {
+        console.log(logString);
+        console.log(constructor);
+    };
+}
+
+@Logger('LOGGING - USER')
+class User {
+    constructor(public name: string) {}
+}
+
+// Practical example - adding metadata
+function Component(options: { selector: string; template: string }) {
+    return function<T extends { new(...args: any[]): {} }>(constructor: T) {
+        return class extends constructor {
+            selector = options.selector;
+            template = options.template;
+        };
+    };
+}
+
+@Component({
+    selector: 'app-user',
+    template: '<div>User Component</div>'
+})
+class UserComponent {
+    constructor(public name: string) {}
+}
+```
+
+### Method Decorators
+
+```typescript
+// Method decorator
+function Log(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+    const originalMethod = descriptor.value;
+
+    descriptor.value = function(...args: any[]) {
+        console.log(`Calling ${propertyKey} with args:`, args);
+        const result = originalMethod.apply(this, args);
+        console.log(`Result:`, result);
+        return result;
+    };
+}
+
+class Calculator {
+    @Log
+    add(a: number, b: number): number {
+        return a + b;
     }
 }
 
-class Cat extends Animal {
-    meow() {
-        console.log("Meow!");
+let calc = new Calculator();
+calc.add(2, 3);
+// Output:
+// Calling add with args: [2, 3]
+// Result: 5
+```
+
+### Property Decorators
+
+```typescript
+function MinLength(length: number) {
+    return function(target: any, propertyKey: string) {
+        let value: string;
+
+        const getter = () => value;
+        const setter = (newVal: string) => {
+            if (newVal.length < length) {
+                throw new Error(`${propertyKey} must be at least ${length} characters`);
+            }
+            value = newVal;
+        };
+
+        Object.defineProperty(target, propertyKey, {
+            get: getter,
+            set: setter
+        });
+    };
+}
+
+class User {
+    @MinLength(3)
+    username: string;
+
+    constructor(username: string) {
+        this.username = username;
     }
 }
 
-function handleAnimal(animal: Animal) {
-    console.log(`Animal name: ${animal.name}`);
-    
-    // instanceof check
-    if (animal instanceof Dog) {
-        animal.bark(); // Safe - TypeScript jaanta hai ye Dog hai
-    } else if (animal instanceof Cat) {
-        animal.meow(); // Safe - TypeScript jaanta hai ye Cat hai
-    }
+// let user = new User("ab"); // Error!
+let user = new User("rahul"); // Valid
+```
+
+### Parameter Decorators
+
+```typescript
+function Required(target: Object, propertyKey: string, parameterIndex: number) {
+    console.log(`Parameter ${parameterIndex} in ${propertyKey} is required`);
 }
 
-let dog = new Dog("Tommy");
-let cat = new Cat("Fluffy");
-
-handleAnimal(dog);
-handleAnimal(cat);
-
-// Error handling with instanceof
-class ValidationError extends Error {
-    constructor(message: string) {
-        super(message);
-        this.name = "ValidationError";
-    }
-}
-
-class NetworkError extends Error {
-    constructor(message: string) {
-        super(message);
-        this.name = "NetworkError";
-    }
-}
-
-function handleError(error: Error) {
-    if (error instanceof ValidationError) {
-        console.log("Validation failed:", error.message);
-    } else if (error instanceof NetworkError) {
-        console.log("Network issue:", error.message);
-    } else {
-        console.log("Unknown error:", error.message);
+class User {
+    greet(@Required name: string) {
+        console.log(`Hello, ${name}`);
     }
 }
 ```
 
 ---
 
+## ⚡ Declaration Files (.d.ts)
+
+**Kya hai?** Type declarations for JavaScript libraries. `.d.ts` files types provide karti hain bina implementation ke.
+
+### Creating Declaration Files
+
+```typescript
+// mathUtils.d.ts
+export function add(a: number, b: number): number;
+export function subtract(a: number, b: number): number;
+export const PI: number;
+
+export class Calculator {
+    constructor();
+    multiply(a: number, b: number): number;
+    divide(a: number, b: number): number;
+}
+
+// Using in your code
+import { add, PI, Calculator } from './mathUtils';
+
+let result = add(5, 3);
+console.log(PI);
+```
+
+### Ambient Declarations
+
+```typescript
+// global.d.ts
+declare const API_URL: string;
+declare const DEBUG: boolean;
+
+declare function globalFunction(param: string): void;
+
+declare namespace MyLibrary {
+    function doSomething(): void;
+    function doSomethingElse(): void;
+}
+
+// Using in code
+console.log(API_URL);
+MyLibrary.doSomething();
+```
+
+### Module Declarations
+
+```typescript
+// declarations.d.ts
+
+// For libraries without types
+declare module 'some-library' {
+    export function someFunction(param: string): number;
+    export class SomeClass {
+        constructor(value: string);
+        method(): void;
+    }
+}
+
+// For CSS modules
+declare module '*.css' {
+    const content: { [className: string]: string };
+    export default content;
+}
+
+// For image imports
+declare module '*.png' {
+    const value: string;
+    export default value;
+}
+
+// Using in code
+import { someFunction } from 'some-library';
+import styles from './App.css';
+import logo from './logo.png';
+```
+
+### Triple-Slash Directives
+
+```typescript
+/// <reference path="./types.d.ts" />
+/// <reference types="node" />
+
+// types.d.ts ko include karta hai
+// node types automatically include karta hai
+```
+
+---
+
+## ⚡ Namespaces
+
+**Kya hai?** Code organization ka purana tarika (modules prefer kiye jate hain modern code mein).
+
+```typescript
+namespace Validation {
+    export interface StringValidator {
+        isValid(s: string): boolean;
+    }
+
+    export class EmailValidator implements StringValidator {
+        isValid(s: string): boolean {
+            return s.includes('@');
+        }
+    }
+
+    export class PhoneValidator implements StringValidator {
+        isValid(s: string): boolean {
+            return /^\d{10}$/.test(s);
+        }
+    }
+}
+
+// Usage
+let emailValidator = new Validation.EmailValidator();
+console.log(emailValidator.isValid("test@example.com")); // true
+
+// Nested namespaces
+namespace App {
+    export namespace Models {
+        export class User {
+            constructor(public name: string) {}
+        }
+    }
+
+    export namespace Services {
+        export class UserService {
+            getUser() {
+                return new Models.User("Raj");
+            }
+        }
+    }
+}
+
+let userService = new App.Services.UserService();
+```
+
+---
+
+## 📚 Best Practices
+
+### When to Use What
+
+```typescript
+// ✅ Use Interface for object shapes
+interface User {
+    name: string;
+    age: number;
+}
+
+// ✅ Use Type for unions/intersections
+type ID = string | number;
+type Status = 'active' | 'inactive';
+
+// ✅ Use Enum for fixed set of related values
+enum Direction {
+    Up, Down, Left, Right
+}
+
+// ✅ Use const assertions for readonly values
+const ROLES = {
+    ADMIN: 'admin',
+    USER: 'user'
+} as const;
+
+// ✅ Use unknown instead of any for type-safe code
+function processData(data: unknown) {
+    if (typeof data === 'string') {
+        // Safe to use as string
+    }
+}
+
+// ✅ Use generics for reusable components
+function identity<T>(value: T): T {
+    return value;
+}
+
+// ✅ Use utility types to transform types
+type ReadonlyUser = Readonly<User>;
+type PartialUser = Partial<User>;
+```
+
+### Type Safety Tips
+
+```typescript
+// ✅ Enable strict mode in tsconfig.json
+{
+    "compilerOptions": {
+        "strict": true,
+        "strictNullChecks": true,
+        "noImplicitAny": true
+    }
+}
+
+// ✅ Avoid 'any' - use 'unknown' if needed
+// ❌ Bad
+function process(data: any) { }
+
+// ✅ Good
+function process(data: unknown) {
+    if (typeof data === 'string') {
+        // Type-safe
+    }
+}
+
+// ✅ Use const assertions for literal types
+// ❌ Type: string
+let status1 = "pending";
+
+// ✅ Type: "pending"
+let status2 = "pending" as const;
+
+// ✅ Use discriminated unions for complex types
+type Shape = 
+    | { kind: 'circle'; radius: number }
+    | { kind: 'square'; size: number };
+```
+
+---
+
+## 🎯 Summary Cheat Sheet
+
+```typescript
+// Types
+let str: string = "hello";
+let num: number = 42;
+let bool: boolean = true;
+let arr: number[] = [1, 2, 3];
+let tuple: [string, number] = ["hello", 42];
+let any: any = "anything";
+let unknown: unknown = "safer than any";
+let never: never; // Function that never returns
+
+// Union & Intersection
+type ID = string | number; // Union
+type Admin = User & { role: string }; // Intersection
+
+// Interfaces
+interface User {
+    name: string;
+    age?: number; // Optional
+    readonly id: number; // Readonly
+}
+
+// Functions
+function greet(name: string): string {
+    return `Hello ${name}`;
+}
+
+const add = (a: number, b: number): number => a + b;
+
+// Generics
+class Box<T> {
+    constructor(private content: T) {}
+}
+
+// Utility Types
+Partial<T>     // All properties optional
+Required<T>    // All properties required
+Readonly<T>    // All properties readonly
+Pick<T, K>     // Select properties
+Omit<T, K>     // Remove properties
+Record<K, T>   // Key-value pairs
+
+// Type Guards
+typeof value === "string"
+value instanceof ClassName
+'property' in object
+
+// Assertions
+value as Type
+value!  // Non-null assertion
+```
+
+---
+
+Happy Learning! 🚀 TypeScript master bano! 💪
