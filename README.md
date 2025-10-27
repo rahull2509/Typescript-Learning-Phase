@@ -1,7 +1,4 @@
 # TypeScript Learning Guide - Day 2 to Day 6 🚀
-
-Namaste! 👋 Ye repository meri TypeScript learning journey hai. Maine TypeScript seekhna start kiya hai aur yaha par maine jo bhi seekha hai wo Hinglish mein explain kiya hai with examples.
-
 ## Table of Contents
 - [Day 2 - Core Type System](#day-2---core-type-system)
 - [Day 3 - Type Inference & Type Annotations](#day-3---type-inference--type-annotations)
@@ -1124,4 +1121,990 @@ console.log(createFullName("Amit", "Sharma"));
 console.log(createFullName("Amit", "Kumar", "Sharma")); 
 // "Amit Kumar Sharma"
 
-console.log(createFullName("Raj", "Kumar",
+console.log(createFullName("Raj", "Kumar", "Singh", "Patel")); 
+// "Raj Kumar Singh Patel"
+```
+
+#### Function Overloads
+
+**Kya hai?** Same function name ke saath different parameter types/counts ke liye alag-alag signatures.
+
+```typescript
+// Overload signatures
+function processInput(input: string): string;
+function processInput(input: number): number;
+function processInput(input: boolean): string;
+
+// Implementation signature
+function processInput(input: string | number | boolean): string | number {
+    if (typeof input === "string") {
+        return input.toUpperCase();
+    } else if (typeof input === "number") {
+        return input * 2;
+    } else {
+        return input ? "YES" : "NO";
+    }
+}
+
+console.log(processInput("hello")); // "HELLO"
+console.log(processInput(5)); // 10
+console.log(processInput(true)); // "YES"
+
+// Practical example - different ways to create a date
+function createDate(timestamp: number): Date;
+function createDate(year: number, month: number, day: number): Date;
+function createDate(dateString: string): Date;
+
+function createDate(a: number | string, b?: number, c?: number): Date {
+    if (typeof a === "string") {
+        return new Date(a);
+    } else if (b !== undefined && c !== undefined) {
+        return new Date(a, b - 1, c); // month 0-indexed hai
+    } else {
+        return new Date(a);
+    }
+}
+
+console.log(createDate(1609459200000)); // Timestamp se
+console.log(createDate(2024, 1, 15)); // Year, month, day se
+console.log(createDate("2024-01-15")); // String se
+
+// Real-world example - search function
+function search(query: string): string[];
+function search(query: string, limit: number): string[];
+function search(query: string, category: string, limit: number): string[];
+
+function search(query: string, categoryOrLimit?: string | number, limit?: number): string[] {
+    console.log(`Searching for: ${query}`);
+    
+    if (typeof categoryOrLimit === "number") {
+        console.log(`Limit: ${categoryOrLimit}`);
+    } else if (typeof categoryOrLimit === "string") {
+        console.log(`Category: ${categoryOrLimit}, Limit: ${limit}`);
+    }
+    
+    return ["result1", "result2"]; // Dummy results
+}
+
+search("laptop");
+search("laptop", 10);
+search("laptop", "electronics", 10);
+```
+
+### ⚙️ Generics
+
+#### Generic Functions
+
+**Kya hai?** Functions jo kisi bhi type ke saath kaam kar sakein - type parameter use karke.
+
+```typescript
+// Generic function - <T> ek type parameter hai
+function identity<T>(value: T): T {
+    return value;
+}
+
+// Different types ke saath use kar sakte hain
+let num = identity<number>(42);
+let str = identity<string>("Hello");
+let bool = identity<boolean>(true);
+
+// Type inference se bhi kaam karega
+let auto = identity(100); // TypeScript samajh jayega ki number hai
+
+// Practical example - array ka first element
+function getFirstElement<T>(arr: T[]): T | undefined {
+    return arr[0];
+}
+
+let firstNum = getFirstElement([1, 2, 3]); // Type: number | undefined
+let firstName = getFirstElement(["a", "b", "c"]); // Type: string | undefined
+
+// Multiple type parameters
+function pair<T, U>(first: T, second: U): [T, U] {
+    return [first, second];
+}
+
+let nameAge = pair<string, number>("Raj", 25);
+let cityCountry = pair("Mumbai", "India"); // Type inference
+
+// Generic with constraints
+interface HasLength {
+    length: number;
+}
+
+function logLength<T extends HasLength>(item: T): void {
+    console.log(`Length: ${item.length}`);
+}
+
+logLength("Hello"); // String has length
+logLength([1, 2, 3]); // Array has length
+logLength({ length: 10, name: "Test" }); // Object with length property
+// logLength(123); // Error! Number doesn't have length
+```
+
+#### Generic Interfaces
+
+**Kya hai?** Interfaces mein bhi generics use kar sakte hain.
+
+```typescript
+// Generic interface
+interface Container<T> {
+    value: T;
+    getValue(): T;
+    setValue(val: T): void;
+}
+
+// Number container
+let numberContainer: Container<number> = {
+    value: 100,
+    getValue() {
+        return this.value;
+    },
+    setValue(val) {
+        this.value = val;
+    }
+};
+
+numberContainer.setValue(200);
+console.log(numberContainer.getValue()); // 200
+
+// String container
+let stringContainer: Container<string> = {
+    value: "Hello",
+    getValue() {
+        return this.value;
+    },
+    setValue(val) {
+        this.value = val;
+    }
+};
+
+// Generic interface with multiple type parameters
+interface KeyValuePair<K, V> {
+    key: K;
+    value: V;
+}
+
+let userAge: KeyValuePair<string, number> = {
+    key: "Amit",
+    value: 25
+};
+
+let setting: KeyValuePair<string, boolean> = {
+    key: "darkMode",
+    value: true
+};
+
+// API response interface
+interface ApiResponse<T> {
+    data: T;
+    status: number;
+    message: string;
+}
+
+interface User {
+    id: number;
+    name: string;
+    email: string;
+}
+
+let userResponse: ApiResponse<User> = {
+    data: {
+        id: 1,
+        name: "Raj",
+        email: "raj@example.com"
+    },
+    status: 200,
+    message: "Success"
+};
+
+let usersResponse: ApiResponse<User[]> = {
+    data: [
+        { id: 1, name: "Raj", email: "raj@example.com" },
+        { id: 2, name: "Priya", email: "priya@example.com" }
+    ],
+    status: 200,
+    message: "Success"
+};
+```
+
+#### Generic Classes
+
+**Kya hai?** Classes mein generics use karke reusable code banana.
+
+```typescript
+// Generic class
+class Box<T> {
+    private content: T;
+
+    constructor(value: T) {
+        this.content = value;
+    }
+
+    getContent(): T {
+        return this.content;
+    }
+
+    setContent(value: T): void {
+        this.content = value;
+    }
+}
+
+// Different types ke boxes
+let numberBox = new Box<number>(123);
+console.log(numberBox.getContent()); // 123
+
+let stringBox = new Box<string>("Hello");
+console.log(stringBox.getContent()); // "Hello"
+
+let userBox = new Box<User>({
+    id: 1,
+    name: "Amit",
+    email: "amit@example.com"
+});
+
+// Generic Stack implementation
+class Stack<T> {
+    private items: T[] = [];
+
+    push(item: T): void {
+        this.items.push(item);
+    }
+
+    pop(): T | undefined {
+        return this.items.pop();
+    }
+
+    peek(): T | undefined {
+        return this.items[this.items.length - 1];
+    }
+
+    isEmpty(): boolean {
+        return this.items.length === 0;
+    }
+
+    size(): number {
+        return this.items.length;
+    }
+}
+
+let numberStack = new Stack<number>();
+numberStack.push(1);
+numberStack.push(2);
+numberStack.push(3);
+console.log(numberStack.pop()); // 3
+console.log(numberStack.peek()); // 2
+
+let stringStack = new Stack<string>();
+stringStack.push("first");
+stringStack.push("second");
+console.log(stringStack.size()); // 2
+
+// Generic with constraints in class
+class DataStore<T extends { id: number }> {
+    private data: T[] = [];
+
+    add(item: T): void {
+        this.data.push(item);
+    }
+
+    findById(id: number): T | undefined {
+        return this.data.find(item => item.id === id);
+    }
+
+    getAll(): T[] {
+        return this.data;
+    }
+}
+
+let userStore = new DataStore<User>();
+userStore.add({ id: 1, name: "Raj", email: "raj@example.com" });
+userStore.add({ id: 2, name: "Priya", email: "priya@example.com" });
+
+console.log(userStore.findById(1));
+```
+
+### 📦 Modules
+
+#### Importing and Exporting Modules
+
+**Kya hai?** Code ko alag-alag files mein organize karna aur unhe import/export karna.
+
+**File 1: `math.ts` (Named Exports)**
+```typescript
+// Named exports - multiple exports ek file se
+export function add(a: number, b: number): number {
+    return a + b;
+}
+
+export function subtract(a: number, b: number): number {
+    return a - b;
+}
+
+export const PI = 3.14159;
+
+export class Calculator {
+    multiply(a: number, b: number): number {
+        return a * b;
+    }
+}
+
+// Ya fir ek saath export kar sakte hain
+// export { add, subtract, PI, Calculator };
+```
+
+**File 2: `app.ts` (Importing)**
+```typescript
+// Named imports
+import { add, subtract, PI } from './math';
+
+console.log(add(5, 3)); // 8
+console.log(subtract(10, 4)); // 6
+console.log(PI); // 3.14159
+
+// Alias ke saath import
+import { add as sum, subtract as minus } from './math';
+
+console.log(sum(2, 3)); // 5
+console.log(minus(10, 5)); // 5
+
+// Sab kuch ek saath import
+import * as MathUtils from './math';
+
+console.log(MathUtils.add(1, 2));
+console.log(MathUtils.PI);
+let calc = new MathUtils.Calculator();
+```
+
+#### Default Exports
+
+**Kya hai?** Ek file se sirf ek cheez default export kar sakte hain.
+
+**File 1: `user.ts` (Default Export)**
+```typescript
+// Default export - ek file se ek hi default export ho sakta
+export default class User {
+    constructor(
+        public name: string,
+        public email: string
+    ) {}
+
+    displayInfo() {
+        console.log(`${this.name} - ${this.email}`);
+    }
+}
+
+// Ya function ko default export
+// export default function createUser(name: string) {
+//     return new User(name, `${name}@example.com`);
+// }
+```
+
+**File 2: `app.ts` (Importing Default)**
+```typescript
+// Default import - koi bhi naam de sakte hain
+import User from './user';
+
+let user = new User("Raj", "raj@example.com");
+user.displayInfo();
+
+// Default aur named exports ek saath
+// File: utils.ts
+export default function mainFunction() {
+    console.log("Main function");
+}
+
+export function helperFunction() {
+    console.log("Helper function");
+}
+
+// Import karna
+import mainFn, { helperFunction } from './utils';
+
+mainFn();
+helperFunction();
+```
+
+#### Code Organization with Modules
+
+**Practical Example - Project Structure:**
+
+```typescript
+// File: models/user.model.ts
+export interface IUser {
+    id: number;
+    name: string;
+    email: string;
+}
+
+export class User implements IUser {
+    constructor(
+        public id: number,
+        public name: string,
+        public email: string
+    ) {}
+}
+
+// File: services/user.service.ts
+import { User, IUser } from '../models/user.model';
+
+export class UserService {
+    private users: User[] = [];
+
+    addUser(user: IUser): void {
+        this.users.push(new User(user.id, user.name, user.email));
+    }
+
+    getUserById(id: number): User | undefined {
+        return this.users.find(u => u.id === id);
+    }
+
+    getAllUsers(): User[] {
+        return this.users;
+    }
+}
+
+// File: utils/validators.ts
+export function isValidEmail(email: string): boolean {
+    return email.includes('@');
+}
+
+export function isValidId(id: number): boolean {
+    return id > 0;
+}
+
+// File: index.ts (Main file)
+import { UserService } from './services/user.service';
+import { isValidEmail, isValidId } from './utils/validators';
+
+let userService = new UserService();
+
+if (isValidId(1) && isValidEmail("test@example.com")) {
+    userService.addUser({
+        id: 1,
+        name: "Raj",
+        email: "test@example.com"
+    });
+}
+
+console.log(userService.getAllUsers());
+```
+
+### 🔒 Type Assertions & Guards
+
+#### Type Assertion & Type Casting
+
+**Kya hai?** TypeScript ko batana ki hum type ke baare mein zyada jaante hain.
+
+```typescript
+// Type Assertion - 'as' syntax (recommended)
+let someValue: unknown = "Hello TypeScript";
+let strLength: number = (someValue as string).length;
+
+console.log(strLength); // 16
+
+// Angle bracket syntax (JSX mein kaam nahi karta)
+let anotherValue: unknown = "Test";
+let len: number = (<string>anotherValue).length;
+
+// Practical example - DOM manipulation
+let inputElement = document.getElementById('username') as HTMLInputElement;
+inputElement.value = "Raj"; // Ab safely access kar sakte hain
+
+// Object type assertion
+interface User {
+    name: string;
+    age: number;
+}
+
+let userData: unknown = {
+    name: "Amit",
+    age: 25
+};
+
+let user = userData as User;
+console.log(user.name); // "Amit"
+
+// Type assertion with API response
+interface ApiResponse {
+    data: any;
+}
+
+let response: ApiResponse = {
+    data: { id: 1, title: "Post 1" }
+};
+
+interface Post {
+    id: number;
+    title: string;
+}
+
+let post = response.data as Post;
+console.log(post.title);
+```
+
+#### Non-null Assertion Operator
+
+**Kya hai?** TypeScript ko batana ki value null/undefined nahi hai (!) operator se.
+
+```typescript
+// Non-null assertion operator (!)
+function getValue(): string | null {
+    return "Hello";
+}
+
+let value = getValue();
+// console.log(value.length); // Error! value null ho sakta hai
+
+// Non-null assertion - hum guarantee de rahe hain ki null nahi hai
+let definiteValue = getValue()!;
+console.log(definiteValue.length); // No error
+
+// DOM example
+let button = document.getElementById('btn')!; // Guarantee hai ki element milega
+button.addEventListener('click', () => {
+    console.log('Clicked!');
+});
+
+// Array access
+let numbers = [1, 2, 3, 4, 5];
+let lastNumber = numbers[numbers.length - 1]!;
+
+// ⚠️ Warning: Carefully use karo - runtime error aa sakta hai agar galat guarantee di
+```
+
+#### Type Guards
+
+**Kya hai?** Runtime par types check karna - safe operations ke liye.
+
+**`typeof` Type Guard:**
+```typescript
+function processValue(value: string | number) {
+    // typeof type guard
+    if (typeof value === "string") {
+        // Is block mein TypeScript jaanta hai ki value string hai
+        console.log(value.toUpperCase());
+    } else {
+        // Yaha TypeScript jaanta hai ki value number hai
+        console.log(value.toFixed(2));
+    }
+}
+
+processValue("hello"); // "HELLO"
+processValue(42.567); // "42.57"
+
+// Multiple types check karna
+function display(input: string | number | boolean) {
+    if (typeof input === "string") {
+        console.log("String:", input.toUpperCase());
+    } else if (typeof input === "number") {
+        console.log("Number:", input * 2);
+    } else {
+        console.log("Boolean:", input ? "YES" : "NO");
+    }
+}
+```
+
+**`instanceof` Type Guard:**
+```typescript
+class Dog {
+    bark() {
+        console.log("Bhow bhow!");
+    }
+}
+
+class Cat {
+    meow() {
+        console.log("Meow!");
+    }
+}
+
+function makeSound(animal: Dog | Cat) {
+    // instanceof type guard
+    if (animal instanceof Dog) {
+        animal.bark(); // Safe - TypeScript jaanta hai ye Dog hai
+    } else {
+        animal.meow(); // Safe - TypeScript jaanta hai ye Cat hai
+    }
+}
+
+let myDog = new Dog();
+let myCat = new Cat();
+
+makeSound(myDog); // "Bhow bhow!"
+makeSound(myCat); // "Meow!"
+
+// Date example
+function formatDate(date: Date | string) {
+    if (date instanceof Date) {
+        return date.toLocaleDateString();
+    } else {
+        return new Date(date).toLocaleDateString();
+    }
+}
+```
+
+**Custom Type Guards:**
+```typescript
+// Custom type guard function
+interface Car {
+    drive(): void;
+    wheels: number;
+}
+
+interface Boat {
+    sail(): void;
+    hasMotor: boolean;
+}
+
+// Type predicate function (return type: 'parameter is Type')
+function isCar(vehicle: Car | Boat): vehicle is Car {
+    return (vehicle as Car).drive !== undefined;
+}
+
+function operateVehicle(vehicle: Car | Boat) {
+    if (isCar(vehicle)) {
+        vehicle.drive(); // TypeScript jaanta hai ye Car hai
+        console.log(`Wheels: ${vehicle.wheels}`);
+    } else {
+        vehicle.sail(); // TypeScript jaanta hai ye Boat hai
+        console.log(`Has motor: ${vehicle.hasMotor}`);
+    }
+}
+
+// Array type guard
+function isStringArray(value: unknown): value is string[] {
+    return Array.isArray(value) && value.every(item => typeof item === "string");
+}
+
+function processArray(arr: unknown) {
+    if (isStringArray(arr)) {
+        // Ab safely string array methods use kar sakte hain
+        arr.forEach(str => console.log(str.toUpperCase()));
+    }
+}
+```
+
+**`in` Operator Type Guard:**
+```typescript
+interface Admin {
+    name: string;
+    privileges: string[];
+}
+
+interface Employee {
+    name: string;
+    startDate: Date;
+}
+
+type UnknownEmployee = Admin | Employee;
+
+function printEmployeeInfo(emp: UnknownEmployee) {
+    console.log(`Name: ${emp.name}`);
+    
+    // 'in' operator se property check karo
+    if ('privileges' in emp) {
+        console.log(`Privileges: ${emp.privileges.join(', ')}`);
+    }
+    
+    if ('startDate' in emp) {
+        console.log(`Start Date: ${emp.startDate.toDateString()}`);
+    }
+}
+
+let admin: Admin = {
+    name: "Raj",
+    privileges: ["create-server", "delete-user"]
+};
+
+let employee: Employee = {
+    name: "Amit",
+    startDate: new Date()
+};
+
+printEmployeeInfo(admin);
+printEmployeeInfo(employee);
+```
+
+### 🧩 Utility Types
+
+#### `Partial<T>`
+
+**Kya hai?** Type ki saari properties ko optional bana deta hai.
+
+```typescript
+interface User {
+    id: number;
+    name: string;
+    email: string;
+    age: number;
+}
+
+// Partial - sabhi properties optional ban jaati hain
+type PartialUser = Partial<User>;
+
+// Equivalent to:
+// {
+//     id?: number;
+//     name?: string;
+//     email?: string;
+//     age?: number;
+// }
+
+// Update function mein useful
+function updateUser(id: number, updates: Partial<User>) {
+    // Sirf jo properties di gayi hain wo update hongi
+    console.log(`Updating user ${id}`, updates);
+}
+
+updateUser(1, { name: "Raj" }); // Sirf name update
+updateUser(2, { email: "new@example.com", age: 26 }); // Email aur age update
+
+// Practical example - form updates
+interface Product {
+    id: number;
+    title: string;
+    price: number;
+    description: string;
+    category: string;
+}
+
+function updateProduct(productId: number, changes: Partial<Product>) {
+    // Database mein sirf jo fields changed hain wo update karo
+    console.log(`Updating product ${productId}:`, changes);
+}
+
+updateProduct(101, { price: 999 });
+updateProduct(102, { title: "New Title", description: "New Description" });
+```
+
+#### `Required<T>`
+
+**Kya hai?** Type ki saari properties ko required (mandatory) bana deta hai.
+
+```typescript
+interface UserProfile {
+    name?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+}
+
+// Required - sabhi properties mandatory ban jaati hain
+type CompleteProfile = Required<UserProfile>;
+
+// Equivalent to:
+// {
+//     name: string;
+//     email: string;
+//     phone: string;
+//     address: string;
+// }
+
+function createCompleteProfile(profile: CompleteProfile) {
+    // Sabhi fields zaroori hain
+    console.log("Complete profile:", profile);
+}
+
+// createCompleteProfile({ name: "Raj" }); // Error! Sabhi fields chahiye
+
+createCompleteProfile({
+    name: "Raj",
+    email: "raj@example.com",
+    phone: "9876543210",
+    address: "Mumbai"
+}); // Valid
+
+// Practical example - config validation
+interface AppConfig {
+    apiUrl?: string;
+    timeout?: number;
+    retries?: number;
+}
+
+type ValidatedConfig = Required<AppConfig>;
+
+function validateConfig(config: AppConfig): config is ValidatedConfig {
+    return config.apiUrl !== undefined &&
+           config.timeout !== undefined &&
+           config.retries !== undefined;
+}
+```
+
+#### `Readonly<T>`
+
+**Kya hai?** Type ki saari properties ko readonly bana deta hai - modify nahi kar sakte.
+
+```typescript
+interface User {
+    id: number;
+    name: string;
+    email: string;
+}
+
+// Readonly - sabhi properties read-only ban jaati hain
+type ReadonlyUser = Readonly<User>;
+
+// Equivalent to:
+// {
+//     readonly id: number;
+//     readonly name: string;
+//     readonly email: string;
+// }
+
+let user: ReadonlyUser = {
+    id: 1,
+    name: "Raj",
+    email: "raj@example.com"
+};
+
+console.log(user.name); // Read kar sakte hain
+// user.name = "New Name"; // Error! Modify nahi kar sakte
+
+// Practical example - immutable data
+interface Config {
+    host: string;
+    port: number;
+    ssl: boolean;
+}
+
+let config: Readonly<Config> = {
+    host: "localhost",
+    port: 3000,
+    ssl: true
+};
+
+// config.port = 8080; // Error! Configuration change nahi kar sakte
+
+// Function return type mein readonly
+function getAppConfig(): Readonly<Config> {
+    return {
+        host: "api.example.com",
+        port: 443,
+        ssl: true
+    };
+}
+
+let appConfig = getAppConfig();
+// appConfig.host = "new-host"; // Error! Readonly hai
+```
+
+#### Use of `typeof` and `instanceof`
+
+**`typeof` Operator:**
+```typescript
+// typeof - variable ki type ko type annotation mein use karna
+
+let person = {
+    name: "Raj",
+    age: 25,
+    city: "Mumbai"
+};
+
+// person ki type ko reuse karna
+type Person = typeof person;
+
+let anotherPerson: Person = {
+    name: "Amit",
+    age: 30,
+    city: "Delhi"
+};
+
+// Function type ko capture karna
+function add(a: number, b: number) {
+    return a + b;
+}
+
+type AddFunction = typeof add;
+
+let multiply: AddFunction = (x, y) => x * y;
+
+// Enum ki type
+enum Status {
+    Active = "ACTIVE",
+    Inactive = "INACTIVE"
+}
+
+type StatusType = typeof Status;
+
+// Constant object ko type ki tarah use karna
+const ROLES = {
+    ADMIN: "admin",
+    USER: "user",
+    GUEST: "guest"
+} as const;
+
+type RoleType = typeof ROLES;
+type Role = typeof ROLES[keyof typeof ROLES];
+
+let userRole: Role = "admin"; // Valid
+// let invalidRole: Role = "superuser"; // Error!
+```
+
+**`instanceof` with Classes:**
+```typescript
+class Animal {
+    name: string;
+    
+    constructor(name: string) {
+        this.name = name;
+    }
+}
+
+class Dog extends Animal {
+    bark() {
+        console.log("Bhow!");
+    }
+}
+
+class Cat extends Animal {
+    meow() {
+        console.log("Meow!");
+    }
+}
+
+function handleAnimal(animal: Animal) {
+    console.log(`Animal name: ${animal.name}`);
+    
+    // instanceof check
+    if (animal instanceof Dog) {
+        animal.bark(); // Safe - TypeScript jaanta hai ye Dog hai
+    } else if (animal instanceof Cat) {
+        animal.meow(); // Safe - TypeScript jaanta hai ye Cat hai
+    }
+}
+
+let dog = new Dog("Tommy");
+let cat = new Cat("Fluffy");
+
+handleAnimal(dog);
+handleAnimal(cat);
+
+// Error handling with instanceof
+class ValidationError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = "ValidationError";
+    }
+}
+
+class NetworkError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = "NetworkError";
+    }
+}
+
+function handleError(error: Error) {
+    if (error instanceof ValidationError) {
+        console.log("Validation failed:", error.message);
+    } else if (error instanceof NetworkError) {
+        console.log("Network issue:", error.message);
+    } else {
+        console.log("Unknown error:", error.message);
+    }
+}
+```
+
+---
+
